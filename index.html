@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>갱이 매매법 물타기 계산기</title>
+  <style>
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      margin: 0;
+      font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+      line-height: 1.6;
+    }
+    .wrap {
+      max-width: 1320px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .card {
+      background: #111827;
+      border: 1px solid #1f2937;
+      border-radius: 20px;
+      padding: 18px;
+      margin-bottom: 16px;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.22);
+    }
+    h1, h2, h3 {
+      margin: 0 0 10px;
+      color: #f9fafb;
+    }
+    h1 { font-size: 28px; line-height: 1.25; }
+    h2 { font-size: 22px; }
+    h3 { font-size: 18px; }
+    p {
+      margin: 6px 0;
+      color: #d1d5db;
+      font-size: 16px;
+    }
+    .muted { color: #9ca3af; font-size: 14px; }
+    .badge {
+      display: inline-block;
+      margin-top: 8px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: #1e3a8a;
+      color: #dbeafe;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 15px;
+      font-weight: 800;
+      color: #f3f4f6;
+    }
+    input, select {
+      width: 100%;
+      min-height: 54px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      border: 1px solid #374151;
+      background: #0b1220;
+      color: #f9fafb;
+      font-size: 17px;
+      outline: none;
+    }
+    input:focus, select:focus {
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 3px rgba(96,165,250,0.15);
+    }
+    .btns {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    button {
+      min-height: 52px;
+      border: 0;
+      border-radius: 14px;
+      padding: 14px 18px;
+      font-size: 17px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .primary {
+      background: #2563eb;
+      color: white;
+      flex: 1 1 180px;
+    }
+    .secondary {
+      background: #374151;
+      color: white;
+      flex: 1 1 140px;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .stat {
+      background: #0b1220;
+      border: 1px solid #1f2937;
+      border-radius: 16px;
+      padding: 16px;
+    }
+    .stat .k {
+      color: #9ca3af;
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+    .stat .v {
+      color: #f9fafb;
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1.35;
+      word-break: break-word;
+    }
+    .table-wrap {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      margin-top: 12px;
+      border-radius: 14px;
+      border: 1px solid #1f2937;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1200px;
+      background: #111827;
+    }
+    th, td {
+      border-bottom: 1px solid #1f2937;
+      padding: 12px 10px;
+      text-align: right;
+      font-size: 14px;
+      white-space: nowrap;
+      vertical-align: middle;
+    }
+    th:first-child, td:first-child { text-align: left; }
+    th {
+      background: #172033;
+      color: #f3f4f6;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .note {
+      background: #0b1220;
+      border: 1px solid #1f2937;
+      border-radius: 14px;
+      padding: 14px;
+      margin-top: 12px;
+    }
+    .ok { color: #86efac; }
+    .warn { color: #fbbf24; }
+    .danger { color: #fca5a5; }
+    .save-info {
+      font-size: 14px;
+      color: #93c5fd;
+      margin-top: 10px;
+    }
+    .footer {
+      color: #9ca3af;
+      font-size: 13px;
+      margin-top: 10px;
+    }
+    .pill {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      background: #1f2937;
+      color: #d1d5db;
+    }
+    .scenario-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 1100px) {
+      .summary { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .grid-3 { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 900px) {
+      h1 { font-size: 24px; }
+      h2 { font-size: 20px; }
+      .grid { grid-template-columns: 1fr; }
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .wrap { padding: 12px; }
+      .card { padding: 16px; border-radius: 18px; }
+      .stat .v { font-size: 19px; }
+    }
+    @media (max-width: 560px) {
+      body { line-height: 1.55; }
+      h1 { font-size: 22px; }
+      h2 { font-size: 18px; }
+      h3 { font-size: 16px; }
+      p { font-size: 15px; }
+      label { font-size: 14px; }
+      input, select {
+        min-height: 52px;
+        font-size: 16px;
+        padding: 13px 14px;
+      }
+      button {
+        width: 100%;
+        min-height: 50px;
+        font-size: 16px;
+      }
+      .btns { flex-direction: column; }
+      .summary, .grid-4 { grid-template-columns: 1fr; }
+      .stat .v { font-size: 18px; }
+      th, td {
+        font-size: 13px;
+        padding: 10px 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>갱이 매매법 물타기 계산기</h1>
+      <p>현재 주가와 총 시드금액만 넣으면, 진입부터 5차까지 추가 매수 가격과 수량을 쉽게 계산합니다.</p>
+      <div class="badge">웹사이트형 / 익절 시나리오 / 원금 회수 / 아이패드·모바일 최적화</div>
+      <p class="muted">입력한 값은 이 브라우저에 자동 저장됩니다.</p>
+    </div>
+
+    <div class="card">
+      <h2>기본 입력</h2>
+      <div class="grid">
+        <div>
+          <label for="stockName">종목명</label>
+          <input id="stockName" type="text" placeholder="예: SOXL, TQQQ, 삼성전자" />
+        </div>
+        <div>
+          <label for="currency">통화 선택</label>
+          <select id="currency">
+            <option value="USD">달러 ($)</option>
+            <option value="KRW">원화 (₩)</option>
+          </select>
+        </div>
+        <div>
+          <label for="price">현재 주가</label>
+          <input id="price" type="number" step="0.0001" min="0" placeholder="예: 20.5" />
+        </div>
+        <div>
+          <label for="seed">총 시드금액</label>
+          <input id="seed" type="number" step="0.01" min="0" placeholder="예: 10000" />
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>아주 쉽게 설명하면:</strong>
+        <p>현재 가격에서 시작해서 주가가 내려올 때 정해진 자리마다 나눠 삽니다. 총 예산을 넣으면 그 돈 안에서 5차까지 갈 수 있도록 첫 수량을 자동으로 계산합니다.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="scenario-title">
+        <h2>익절 시나리오 설정</h2>
+        <span class="pill">확장형</span>
+      </div>
+
+      <div class="grid-4">
+        <div>
+          <label for="takeMode">익절 방식</label>
+          <select id="takeMode">
+            <option value="all">전량 익절</option>
+            <option value="first">첫 진입 수량만 남기기</option>
+            <option value="custom">직접 수량 남기기</option>
+            <option value="recover">원금 회수 후 보유</option>
+          </select>
+        </div>
+        <div>
+          <label for="targetType">익절 목표 방식</label>
+          <select id="targetType">
+            <option value="preset">기본 선택</option>
+            <option value="custom">직접 입력</option>
+          </select>
+        </div>
+        <div>
+          <label for="targetRate">기본 익절 목표</label>
+          <select id="targetRate">
+            <option value="3">+3%</option>
+            <option value="5">+5%</option>
+            <option value="10">+10%</option>
+            <option value="15">+15%</option>
+            <option value="20">+20%</option>
+            <option value="25">+25%</option>
+            <option value="30">+30%</option>
+          </select>
+        </div>
+        <div>
+          <label for="customTargetRate">직접 입력 익절 목표 (%)</label>
+          <input id="customTargetRate" type="number" step="0.01" min="0" placeholder="예: 7.5" />
+        </div>
+        <div>
+          <label for="customRemainQty">직접 남길 수량</label>
+          <input id="customRemainQty" type="number" step="0.0001" min="0" placeholder="예: 10" />
+        </div>
+      </div>
+
+      <div class="btns">
+        <button class="primary" onclick="calculate()">계산하기</button>
+        <button class="secondary" onclick="resetForm()">초기화</button>
+      </div>
+
+      <div class="save-info" id="saveStatus">입력값 자동 저장 대기중</div>
+    </div>
+
+    <div class="card" id="resultCard" style="display:none;">
+      <h2 id="resultTitle">계산 결과</h2>
+
+      <div class="summary">
+        <div class="stat">
+          <div class="k">자동 기준 수량</div>
+          <div class="v" id="baseQty">-</div>
+        </div>
+        <div class="stat">
+          <div class="k">총 예상 투입금</div>
+          <div class="v" id="totalCost">-</div>
+        </div>
+        <div class="stat">
+          <div class="k">남는 금액</div>
+          <div class="v" id="remainCash">-</div>
+        </div>
+        <div class="stat">
+          <div class="k">최종 누적 평단</div>
+          <div class="v" id="finalAvg">-</div>
+        </div>
+        <div class="stat">
+          <div class="k">선택 익절 목표</div>
+          <div class="v" id="selectedTarget">-</div>
+        </div>
+        <div class="stat">
+          <div class="k">최종 선택 익절가</div>
+          <div class="v" id="selectedTargetPrice">-</div>
+        </div>
+      </div>
+
+      <h3 style="margin-top:18px;">물타기 결과표</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>단계</th>
+              <th>매수 가격</th>
+              <th>배수</th>
+              <th>매수 수량</th>
+              <th>투입금</th>
+              <th>누적 수량</th>
+              <th>누적 투입금</th>
+              <th>누적 평단</th>
+              <th>+3%</th>
+              <th>+5%</th>
+              <th>+10%</th>
+              <th>+15%</th>
+              <th>+20%</th>
+              <th>+25%</th>
+              <th>+30%</th>
+            </tr>
+          </thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+
+      <h3 style="margin-top:18px;">익절 시나리오 표</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>기준 단계</th>
+              <th>누적 수량</th>
+              <th>누적 평단</th>
+              <th>선택 익절가</th>
+              <th>남길 수량</th>
+              <th>매도 수량</th>
+              <th>예상 매도 금액</th>
+              <th>해당 단계 총 평가금액</th>
+              <th>원금 회수 필요 매도수량</th>
+              <th>원금 회수 후 남는 수량</th>
+            </tr>
+          </thead>
+          <tbody id="scenarioBody"></tbody>
+        </table>
+      </div>
+
+      <div class="note" id="simpleGuide"></div>
+      <div class="footer">※ 참고용 계산기이며 수수료, 세금, 슬리피지는 제외한 단순 계산입니다.</div>
+    </div>
+  </div>
+
+  <script>
+    const KEY = "gangee_calc_expand_v2";
+
+    function getCurrencyInfo() {
+      const currency = document.getElementById("currency").value;
+      if (currency === "KRW") {
+        return { symbol: "₩", locale: "ko-KR" };
+      }
+      return { symbol: "$", locale: "en-US" };
+    }
+
+    function fmtNum(v, d = 4) {
+      return Number(v).toLocaleString("en-US", {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: d
+      });
+    }
+
+    function fmtMoney(v) {
+      const info = getCurrencyInfo();
+      return info.symbol + Number(v).toLocaleString(info.locale, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function getPlan(price) {
+      const mults = [1, 1, 2, 4, 12, 36];
+      const names = ["진입", "1차", "2차", "3차", "4차", "5차"];
+      const prices = [];
+      prices[0] = price;
+      prices[1] = prices[0] * 0.8;
+      prices[2] = prices[1] * 0.89;
+      prices[3] = prices[2] * 0.5;
+      prices[4] = prices[3] * 0.5;
+      prices[5] = prices[4] * 0.5;
+
+      return names.map((name, i) => ({
+        name,
+        price: prices[i],
+        mult: mults[i]
+      }));
+    }
+
+    function saveInputs() {
+      const data = {
+        stockName: document.getElementById("stockName").value,
+        currency: document.getElementById("currency").value,
+        price: document.getElementById("price").value,
+        seed: document.getElementById("seed").value,
+        takeMode: document.getElementById("takeMode").value,
+        targetType: document.getElementById("targetType").value,
+        targetRate: document.getElementById("targetRate").value,
+        customTargetRate: document.getElementById("customTargetRate").value,
+        customRemainQty: document.getElementById("customRemainQty").value
+      };
+      localStorage.setItem(KEY, JSON.stringify(data));
+      document.getElementById("saveStatus").textContent = "입력값이 이 기기에 자동 저장되었습니다.";
+    }
+
+    function loadInputs() {
+      const raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      try {
+        const data = JSON.parse(raw);
+        document.getElementById("stockName").value = data.stockName || "";
+        document.getElementById("currency").value = data.currency || "USD";
+        document.getElementById("price").value = data.price || "";
+        document.getElementById("seed").value = data.seed || "";
+        document.getElementById("takeMode").value = data.takeMode || "all";
+        document.getElementById("targetType").value = data.targetType || "preset";
+        document.getElementById("targetRate").value = data.targetRate || "3";
+        document.getElementById("customTargetRate").value = data.customTargetRate || "";
+        document.getElementById("customRemainQty").value = data.customRemainQty || "";
+        document.getElementById("saveStatus").textContent = "이전에 저장된 입력값을 불러왔습니다.";
+      } catch (e) {
+        document.getElementById("saveStatus").textContent = "저장값을 읽지 못했습니다.";
+      }
+      toggleCustomFields();
+    }
+
+    function bindAutoSave() {
+      ["stockName", "currency", "price", "seed", "takeMode", "targetType", "targetRate", "customTargetRate", "customRemainQty"].forEach(id => {
+        document.getElementById(id).addEventListener("input", saveInputs);
+        document.getElementById(id).addEventListener("change", () => {
+          toggleCustomFields();
+          saveInputs();
+        });
+      });
+    }
+
+    function toggleCustomFields() {
+      const takeMode = document.getElementById("takeMode").value;
+      const targetType = document.getElementById("targetType").value;
+      document.getElementById("customRemainQty").disabled = takeMode !== "custom";
+      document.getElementById("customTargetRate").disabled = targetType !== "custom";
+      document.getElementById("targetRate").disabled = targetType !== "preset";
+    }
+
+    function getSelectedRate() {
+      const targetType = document.getElementById("targetType").value;
+      if (targetType === "custom") {
+        return parseFloat(document.getElementById("customTargetRate").value || "0");
+      }
+      return parseFloat(document.getElementById("targetRate").value);
+    }
+
+    function getRemainQty(mode, baseQty, cumQty, customRemainQty) {
+      if (mode === "all") return 0;
+      if (mode === "first") return Math.min(baseQty, cumQty);
+      if (mode === "custom") return Math.min(Math.max(customRemainQty, 0), cumQty);
+      if (mode === "recover") return null;
+      return 0;
+    }
+
+    function calculate() {
+      const stockName = document.getElementById("stockName").value.trim();
+      const price = parseFloat(document.getElementById("price").value);
+      const seed = parseFloat(document.getElementById("seed").value);
+      const takeMode = document.getElementById("takeMode").value;
+      const selectedRate = getSelectedRate();
+      const customRemainQty = parseFloat(document.getElementById("customRemainQty").value || "0");
+
+      if (!price || !seed || price <= 0 || seed <= 0) {
+        alert("현재 주가와 총 시드금액을 올바르게 입력해주세요.");
+        return;
+      }
+      if (selectedRate < 0) {
+        alert("익절 목표 퍼센트는 0 이상으로 입력해주세요.");
+        return;
+      }
+      if (takeMode === "custom" && customRemainQty < 0) {
+        alert("직접 남길 수량은 0 이상으로 입력해주세요.");
+        return;
+      }
+
+      saveInputs();
+
+      const plan = getPlan(price);
+      const unitCost = plan.reduce((sum, row) => sum + row.price * row.mult, 0);
+      const baseQty = seed / unitCost;
+
+      let cumQty = 0;
+      let cumCost = 0;
+
+      const rows = plan.map(row => {
+        const qty = baseQty * row.mult;
+        const cost = qty * row.price;
+        cumQty += qty;
+        cumCost += cost;
+        const avg = cumCost / cumQty;
+
+        return {
+          ...row,
+          qty,
+          cost,
+          cumQty,
+          cumCost,
+          avg,
+          tp3: avg * 1.03,
+          tp5: avg * 1.05,
+          tp10: avg * 1.10,
+          tp15: avg * 1.15,
+          tp20: avg * 1.20,
+          tp25: avg * 1.25,
+          tp30: avg * 1.30
+        };
+      });
+
+      const finalRow = rows[rows.length - 1];
+      const selectedTargetPrice = finalRow.avg * (1 + selectedRate / 100);
+      const totalCost = finalRow.cumCost;
+      const remainCash = seed - totalCost;
+
+      document.getElementById("resultTitle").textContent = stockName ? `계산 결과 - ${stockName}` : "계산 결과";
+      document.getElementById("baseQty").textContent = fmtNum(baseQty, 4) + "주";
+      document.getElementById("totalCost").textContent = fmtMoney(totalCost);
+      document.getElementById("remainCash").textContent = fmtMoney(remainCash);
+      document.getElementById("finalAvg").textContent = fmtMoney(finalRow.avg);
+      document.getElementById("selectedTarget").textContent = `+${fmtNum(selectedRate, 2)}%`;
+      document.getElementById("selectedTargetPrice").textContent = fmtMoney(selectedTargetPrice);
+
+      document.getElementById("tbody").innerHTML = rows.map(r => `
+        <tr>
+          <td>${r.name}</td>
+          <td>${fmtMoney(r.price)}</td>
+          <td>${r.mult}배</td>
+          <td>${fmtNum(r.qty, 4)}주</td>
+          <td>${fmtMoney(r.cost)}</td>
+          <td>${fmtNum(r.cumQty, 4)}주</td>
+          <td>${fmtMoney(r.cumCost)}</td>
+          <td>${fmtMoney(r.avg)}</td>
+          <td>${fmtMoney(r.tp3)}</td>
+          <td>${fmtMoney(r.tp5)}</td>
+          <td>${fmtMoney(r.tp10)}</td>
+          <td>${fmtMoney(r.tp15)}</td>
+          <td>${fmtMoney(r.tp20)}</td>
+          <td>${fmtMoney(r.tp25)}</td>
+          <td>${fmtMoney(r.tp30)}</td>
+        </tr>
+      `).join("");
+
+      document.getElementById("scenarioBody").innerHTML = rows.map(r => {
+        const exitPrice = r.avg * (1 + selectedRate / 100);
+        const totalEval = r.cumQty * exitPrice;
+
+        let remainQty = getRemainQty(takeMode, baseQty, r.cumQty, customRemainQty);
+        let sellQty = 0;
+        let sellAmount = 0;
+        let recoverQty = r.cumCost / exitPrice;
+        let recoverRemainQty = Math.max(r.cumQty - recoverQty, 0);
+
+        if (takeMode === "recover") {
+          sellQty = Math.min(recoverQty, r.cumQty);
+          sellAmount = sellQty * exitPrice;
+          remainQty = Math.max(r.cumQty - sellQty, 0);
+        } else {
+          sellQty = Math.max(r.cumQty - remainQty, 0);
+          sellAmount = sellQty * exitPrice;
+        }
+
+        return `
+          <tr>
+            <td>${r.name}까지</td>
+            <td>${fmtNum(r.cumQty, 4)}주</td>
+            <td>${fmtMoney(r.avg)}</td>
+            <td>${fmtMoney(exitPrice)}</td>
+            <td>${takeMode === "recover" ? fmtNum(remainQty, 4) + "주" : fmtNum(remainQty, 4) + "주"}</td>
+            <td>${fmtNum(sellQty, 4)}주</td>
+            <td>${fmtMoney(sellAmount)}</td>
+            <td>${fmtMoney(totalEval)}</td>
+            <td>${fmtNum(Math.min(recoverQty, r.cumQty), 4)}주</td>
+            <td>${fmtNum(recoverRemainQty, 4)}주</td>
+          </tr>
+        `;
+      }).join("");
+
+      const modeText =
+        takeMode === "all" ? "전량 익절" :
+        takeMode === "first" ? "첫 진입 수량만 남기기" :
+        takeMode === "custom" ? `직접 수량 ${fmtNum(customRemainQty, 4)}주 남기기` :
+        "원금 회수 후 보유";
+
+      document.getElementById("simpleGuide").innerHTML = `
+        <strong>${stockName ? stockName + " " : ""}한눈에 보는 쉬운 설명</strong>
+        <p>총 시드금액 ${fmtMoney(seed)} 안에서 5차까지 가능하도록 첫 기준 수량을 <span class="ok">${fmtNum(baseQty, 4)}주</span>로 자동 계산했습니다.</p>
+        <p>현재 선택한 익절 목표는 <span class="warn">+${fmtNum(selectedRate, 2)}%</span>이고, 최종 기준 선택 익절가는 <span class="warn">${fmtMoney(selectedTargetPrice)}</span>입니다.</p>
+        <p>현재 익절 방식은 <span class="warn">${modeText}</span>입니다.</p>
+        <p>익절 시나리오 표에서는 각 단계까지만 물탔을 때 반등이 나오면 몇 주를 팔고, 얼마를 회수하고, 몇 주가 남는지 볼 수 있습니다.</p>
+        <p>원금 회수 열은 현재 단계까지 넣은 누적 금액을 되찾으려면 몇 주를 팔아야 하는지도 같이 보여줍니다.</p>
+      `;
+
+      document.getElementById("resultCard").style.display = "block";
+      document.getElementById("resultCard").scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function resetForm() {
+      document.getElementById("stockName").value = "";
+      document.getElementById("currency").value = "USD";
+      document.getElementById("price").value = "";
+      document.getElementById("seed").value = "";
+      document.getElementById("takeMode").value = "all";
+      document.getElementById("targetType").value = "preset";
+      document.getElementById("targetRate").value = "3";
+      document.getElementById("customTargetRate").value = "";
+      document.getElementById("customRemainQty").value = "";
+      document.getElementById("resultCard").style.display = "none";
+      document.getElementById("tbody").innerHTML = "";
+      document.getElementById("scenarioBody").innerHTML = "";
+      document.getElementById("resultTitle").textContent = "계산 결과";
+      document.getElementById("baseQty").textContent = "-";
+      document.getElementById("totalCost").textContent = "-";
+      document.getElementById("remainCash").textContent = "-";
+      document.getElementById("finalAvg").textContent = "-";
+      document.getElementById("selectedTarget").textContent = "-";
+      document.getElementById("selectedTargetPrice").textContent = "-";
+      document.getElementById("simpleGuide").innerHTML = "";
+      localStorage.removeItem(KEY);
+      document.getElementById("saveStatus").textContent = "저장값과 입력값을 모두 초기화했습니다.";
+      toggleCustomFields();
+    }
+
+    loadInputs();
+    bindAutoSave();
+    toggleCustomFields();
+  </script>
+</body>
+</html>
