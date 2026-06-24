@@ -3,25 +3,60 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>갱이 매매법 물타기 계산기</title>
+  <title>갱이 투자 계산기</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="wrap">
     <div class="card hero-card">
-      <h1>갱이 매매법 물타기 계산기</h1>
-      <p>새로 시작할 때도, 이미 보유 중인 상태에서 추가 물타기 계획을 짤 때도 사용할 수 있습니다.</p>
-      <div class="badge">v6.1 / 저장목록 상단 배치 / 한눈 요약 개선</div>
-      <p class="muted">입력값은 자동 저장되고, 종목별로 따로 저장해서 다시 불러올 수 있습니다.</p>
+      <h1>갱이 투자 계산기</h1>
+      <p>한 개의 웹에서 갱이 매매법 물타기 계산기와 갱이 무한매수법 계산기를 선택해서 사용할 수 있습니다.</p>
+      <div class="badge">통합 버전 / 저장 지원 / 웹사이트형 / 아이패드·노트북 최적화</div>
+      <p class="muted">설정은 자동 저장되고, 계산기 종류별로 저장/불러오기가 가능합니다.</p>
     </div>
 
     <div class="card">
       <div class="section-head">
-        <h2>시작 방식</h2>
-        <span class="pill">상단 관리형</span>
+        <h2>계산기 선택</h2>
+        <span class="pill">통합형</span>
+      </div>
+      <div class="tab-row">
+        <button class="tab-btn active" id="tabAveraging" data-tab="averaging">갱이 매매법 계산기</button>
+        <button class="tab-btn" id="tabInfinite" data-tab="infinite">갱이 무한매수법 계산기</button>
       </div>
 
+      <div class="top-save-box">
+        <div class="grid-5">
+          <div>
+            <label for="presetName">저장 이름</label>
+            <input id="presetName" type="text" placeholder="예: SOXL 물타기, TQQQ 무한매수" />
+          </div>
+          <div class="align-end">
+            <button class="warning full-btn" id="savePresetBtn">현재 설정 저장</button>
+          </div>
+          <div>
+            <label for="presetSelect">저장된 설정 목록</label>
+            <select id="presetSelect">
+              <option value="">저장된 설정을 선택하세요</option>
+            </select>
+          </div>
+          <div class="align-end">
+            <button class="primary full-btn" id="loadPresetBtn">선택 불러오기</button>
+          </div>
+          <div class="align-end">
+            <button class="danger-btn full-btn" id="deletePresetBtn">선택 삭제</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>공통 기본 입력</h2>
       <div class="grid">
+        <div>
+          <label for="calculatorType">현재 계산기</label>
+          <input id="calculatorType" type="text" value="갱이 매매법 계산기" readonly />
+        </div>
         <div>
           <label for="startMode">시작 방식 선택</label>
           <select id="startMode">
@@ -43,30 +78,6 @@
         <div>
           <label for="price">현재 주가</label>
           <input id="price" type="number" step="0.0001" min="0" placeholder="예: 20.5" />
-        </div>
-      </div>
-
-      <div class="top-save-box">
-        <div class="grid-5">
-          <div>
-            <label for="presetName">저장 이름</label>
-            <input id="presetName" type="text" placeholder="예: SOXL 보유중, TQQQ 새진입" />
-          </div>
-          <div class="align-end">
-            <button class="warning full-btn" id="savePresetBtn">현재 설정 저장</button>
-          </div>
-          <div>
-            <label for="presetSelect">저장된 설정 목록</label>
-            <select id="presetSelect">
-              <option value="">저장된 설정을 선택하세요</option>
-            </select>
-          </div>
-          <div class="align-end">
-            <button class="primary full-btn" id="loadPresetBtn">선택 불러오기</button>
-          </div>
-          <div class="align-end">
-            <button class="danger-btn full-btn" id="deletePresetBtn">선택 삭제</button>
-          </div>
         </div>
       </div>
 
@@ -98,20 +109,20 @@
 
       <div class="note">
         <strong>아주 쉽게 설명하면:</strong>
-        <p>새로 시작은 처음부터 계획을 짜는 방식이고, 보유 상태 시작은 이미 들고 있는 수량과 평단을 먼저 반영한 뒤 남은 시드로 추가 물타기 계획을 계산하는 방식입니다.</p>
+        <p>새로 시작은 처음부터 계획을 짜는 방식이고, 보유 상태 시작은 이미 들고 있는 수량과 평단을 먼저 반영한 뒤 남은 시드로 추가 계획을 계산하는 방식입니다.</p>
       </div>
     </div>
 
-    <div class="card">
+    <div class="card" id="averagingSection">
       <div class="section-head">
-        <h2>익절 시나리오 설정</h2>
-        <span class="pill">실전형</span>
+        <h2>갱이 매매법 계산기 설정</h2>
+        <span class="pill">물타기</span>
       </div>
 
       <div class="grid-4">
         <div>
-          <label for="takeMode">익절 방식</label>
-          <select id="takeMode">
+          <label for="avgTakeMode">익절 방식</label>
+          <select id="avgTakeMode">
             <option value="all">전량 익절</option>
             <option value="first">첫 진입 수량만 남기기</option>
             <option value="custom">직접 수량 남기기</option>
@@ -119,15 +130,15 @@
           </select>
         </div>
         <div>
-          <label for="targetType">익절 목표 방식</label>
-          <select id="targetType">
+          <label for="avgTargetType">익절 목표 방식</label>
+          <select id="avgTargetType">
             <option value="preset">기본 선택</option>
             <option value="custom">직접 입력</option>
           </select>
         </div>
         <div>
-          <label for="targetRate">기본 익절 목표</label>
-          <select id="targetRate">
+          <label for="avgTargetRate">기본 익절 목표</label>
+          <select id="avgTargetRate">
             <option value="3">+3%</option>
             <option value="5">+5%</option>
             <option value="10">+10%</option>
@@ -138,83 +149,101 @@
           </select>
         </div>
         <div>
-          <label for="customTargetRate">직접 입력 익절 목표 (%)</label>
-          <input id="customTargetRate" type="number" step="0.01" min="0" placeholder="예: 7.5" />
+          <label for="avgCustomTargetRate">직접 입력 익절 목표 (%)</label>
+          <input id="avgCustomTargetRate" type="number" step="0.01" min="0" placeholder="예: 7.5" />
         </div>
         <div>
-          <label for="customRemainQty">직접 남길 수량</label>
-          <input id="customRemainQty" type="number" step="0.0001" min="0" placeholder="예: 10" />
+          <label for="avgCustomRemainQty">직접 남길 수량</label>
+          <input id="avgCustomRemainQty" type="number" step="0.0001" min="0" placeholder="예: 10" />
+        </div>
+      </div>
+    </div>
+
+    <div class="card hidden" id="infiniteSection">
+      <div class="section-head">
+        <h2>갱이 무한매수법 계산기 설정</h2>
+        <span class="pill">무한매수</span>
+      </div>
+
+      <div class="grid-4">
+        <div>
+          <label for="infSplitCount">분할 수</label>
+          <input id="infSplitCount" type="number" step="1" min="1" value="40" />
+        </div>
+        <div>
+          <label for="infTakeMode">익절 방식</label>
+          <select id="infTakeMode">
+            <option value="all">전량 익절</option>
+            <option value="recover">원금 회수 후 보유</option>
+          </select>
+        </div>
+        <div>
+          <label for="infTargetType">익절 목표 방식</label>
+          <select id="infTargetType">
+            <option value="preset">기본 선택</option>
+            <option value="custom">직접 입력</option>
+          </select>
+        </div>
+        <div>
+          <label for="infTargetRate">기본 익절 목표</label>
+          <select id="infTargetRate">
+            <option value="3">+3%</option>
+            <option value="5">+5%</option>
+            <option value="10">+10%</option>
+            <option value="15">+15%</option>
+            <option value="20">+20%</option>
+          </select>
+        </div>
+        <div>
+          <label for="infCustomTargetRate">직접 입력 익절 목표 (%)</label>
+          <input id="infCustomTargetRate" type="number" step="0.01" min="0" placeholder="예: 7.5" />
+        </div>
+        <div>
+          <label for="infMinBuyQty">하루 최소 매수 기준</label>
+          <input id="infMinBuyQty" type="number" step="1" min="1" value="2" />
         </div>
       </div>
 
+      <div class="note">
+        <strong>무한매수법 쉽게 설명:</strong>
+        <p>총 시드를 여러 분할로 나누고, 현재 상태를 기준으로 반복해서 매수/관리/익절하는 계산기입니다. 오늘 얼마를 사야 하는지, 남은 분할과 남은 시드를 함께 봅니다.</p>
+      </div>
+    </div>
+
+    <div class="card">
       <div class="btns">
         <button class="primary" id="calcBtn">계산하기</button>
         <button class="secondary" id="resetBtn">초기화</button>
         <button class="success" id="copyPlanBtn">계획 요약 복사</button>
-        <button class="success" id="copyScenarioBtn">익절 시나리오 복사</button>
+        <button class="success" id="copyScenarioBtn">시나리오 복사</button>
       </div>
-
       <div class="save-info" id="saveStatus">입력값 자동 저장 대기중</div>
     </div>
 
-    <div class="card" id="resultCard" style="display:none;">
-      <h2 id="resultTitle">계산 결과</h2>
+    <div class="card hidden" id="avgResultCard">
+      <h2 id="avgResultTitle">갱이 매매법 계산 결과</h2>
 
       <div class="summary">
-        <div class="stat">
-          <div class="k">추가매수 기준 수량</div>
-          <div class="v" id="baseQty">-</div>
-        </div>
-        <div class="stat">
-          <div class="k">기존 보유 금액</div>
-          <div class="v" id="existingCost">-</div>
-        </div>
-        <div class="stat">
-          <div class="k">추가 매수 총액</div>
-          <div class="v" id="totalCost">-</div>
-        </div>
-        <div class="stat">
-          <div class="k">남는 금액</div>
-          <div class="v" id="remainCash">-</div>
-        </div>
-        <div class="stat">
-          <div class="k">최종 합산 수량</div>
-          <div class="v" id="finalQty">-</div>
-        </div>
-        <div class="stat">
-          <div class="k">최종 합산 평단</div>
-          <div class="v" id="finalAvg">-</div>
-        </div>
-        <div class="stat">
-          <div class="k">선택 익절 목표</div>
-          <div class="v" id="selectedTarget">-</div>
-        </div>
-        <div class="stat">
-          <div class="k">최종 선택 익절가</div>
-          <div class="v" id="selectedTargetPrice">-</div>
-        </div>
-        <div class="stat profit-stat">
-          <div class="k">최종 예상 수익</div>
-          <div class="v" id="finalProfit">-</div>
-        </div>
-        <div class="stat profit-stat">
-          <div class="k">최종 예상 수익률</div>
-          <div class="v" id="finalProfitRate">-</div>
-        </div>
+        <div class="stat"><div class="k">추가매수 기준 수량</div><div class="v" id="avgBaseQty">-</div></div>
+        <div class="stat"><div class="k">기존 보유 금액</div><div class="v" id="avgExistingCost">-</div></div>
+        <div class="stat"><div class="k">추가 매수 총액</div><div class="v" id="avgTotalCost">-</div></div>
+        <div class="stat"><div class="k">남는 금액</div><div class="v" id="avgRemainCash">-</div></div>
+        <div class="stat"><div class="k">최종 합산 수량</div><div class="v" id="avgFinalQty">-</div></div>
+        <div class="stat"><div class="k">최종 합산 평단</div><div class="v" id="avgFinalAvg">-</div></div>
+        <div class="stat"><div class="k">선택 익절 목표</div><div class="v" id="avgSelectedTarget">-</div></div>
+        <div class="stat"><div class="k">최종 선택 익절가</div><div class="v" id="avgSelectedTargetPrice">-</div></div>
+        <div class="stat profit-stat"><div class="k">최종 예상 수익</div><div class="v" id="avgFinalProfit">-</div></div>
+        <div class="stat profit-stat"><div class="k">최종 예상 수익률</div><div class="v" id="avgFinalProfitRate">-</div></div>
       </div>
 
       <div class="quick-summary-grid">
         <div class="quick-card">
-          <div class="quick-card-head">
-            <h3>계획 한눈 요약</h3>
-          </div>
-          <div id="planSummaryView" class="quick-list"></div>
+          <div class="quick-card-head"><h3>계획 한눈 요약</h3></div>
+          <div id="avgPlanSummaryView" class="quick-list"></div>
         </div>
         <div class="quick-card">
-          <div class="quick-card-head">
-            <h3>익절 시나리오 한눈 요약</h3>
-          </div>
-          <div id="scenarioSummaryView" class="quick-list"></div>
+          <div class="quick-card-head"><h3>익절 시나리오 한눈 요약</h3></div>
+          <div id="avgScenarioSummaryView" class="quick-list"></div>
         </div>
       </div>
 
@@ -240,7 +269,7 @@
               <th>+30%</th>
             </tr>
           </thead>
-          <tbody id="tbody"></tbody>
+          <tbody id="avgTbody"></tbody>
         </table>
       </div>
 
@@ -263,16 +292,79 @@
               <th>원금 회수 후 남는 수익</th>
             </tr>
           </thead>
-          <tbody id="scenarioBody"></tbody>
+          <tbody id="avgScenarioBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card hidden" id="infResultCard">
+      <h2 id="infResultTitle">갱이 무한매수법 계산 결과</h2>
+
+      <div class="summary">
+        <div class="stat"><div class="k">1분할 금액</div><div class="v" id="infUnitSeed">-</div></div>
+        <div class="stat"><div class="k">현재 보유 금액</div><div class="v" id="infExistingCost">-</div></div>
+        <div class="stat"><div class="k">현재 보유 수량</div><div class="v" id="infExistingQty">-</div></div>
+        <div class="stat"><div class="k">현재 평단</div><div class="v" id="infCurrentAvg">-</div></div>
+        <div class="stat"><div class="k">오늘 매수 수량</div><div class="v" id="infTodayBuyQty">-</div></div>
+        <div class="stat"><div class="k">오늘 매수 금액</div><div class="v" id="infTodayBuyCost">-</div></div>
+        <div class="stat"><div class="k">남은 분할 수</div><div class="v" id="infRemainingSplit">-</div></div>
+        <div class="stat"><div class="k">남은 시드</div><div class="v" id="infRemainingCash">-</div></div>
+        <div class="stat"><div class="k">익절 목표가</div><div class="v" id="infTargetPrice">-</div></div>
+        <div class="stat profit-stat"><div class="k">예상 수익률</div><div class="v" id="infProfitRate">-</div></div>
+      </div>
+
+      <div class="quick-summary-grid">
+        <div class="quick-card">
+          <div class="quick-card-head"><h3>오늘 해야 할 행동</h3></div>
+          <div id="infPlanSummaryView" class="quick-list"></div>
+        </div>
+        <div class="quick-card">
+          <div class="quick-card-head"><h3>사이클 한눈 요약</h3></div>
+          <div id="infScenarioSummaryView" class="quick-list"></div>
+        </div>
+      </div>
+
+      <h3 class="sub-head">분할 매수 계획표</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>회차</th>
+              <th>기준 가격</th>
+              <th>매수 수량</th>
+              <th>매수 금액</th>
+              <th>누적 수량</th>
+              <th>누적 평단</th>
+              <th>남은 시드</th>
+              <th>남은 분할</th>
+            </tr>
+          </thead>
+          <tbody id="infTbody"></tbody>
         </table>
       </div>
 
-      <textarea id="planText" class="hidden-copy"></textarea>
-      <textarea id="scenarioText" class="hidden-copy"></textarea>
-
-      <div class="note" id="simpleGuide"></div>
-      <div class="footer">※ 참고용 계산기이며 수수료, 세금, 슬리피지는 제외한 단순 계산입니다.</div>
+      <h3 class="sub-head">익절 시나리오 표</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>상태</th>
+              <th>누적 수량</th>
+              <th>누적 평단</th>
+              <th>익절 목표가</th>
+              <th>전량 매도 시 예상 수익</th>
+              <th>예상 수익률</th>
+              <th>원금 회수 필요 매도수량</th>
+              <th>원금 회수 후 남는 수량</th>
+            </tr>
+          </thead>
+          <tbody id="infScenarioBody"></tbody>
+        </table>
+      </div>
     </div>
+
+    <textarea id="planText" class="hidden-copy"></textarea>
+    <textarea id="scenarioText" class="hidden-copy"></textarea>
   </div>
 
   <script src="app.js"></script>
