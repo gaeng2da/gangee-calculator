@@ -11,12 +11,16 @@
     <div class="card hero-card">
       <h1>갱이 매매법 물타기 계산기</h1>
       <p>새로 시작할 때도, 이미 보유 중인 상태에서 추가 물타기 계획을 짤 때도 사용할 수 있습니다.</p>
-      <div class="badge">v6 / 보유 상태 시작 지원 / 종목 저장 / 웹사이트형</div>
+      <div class="badge">v6.1 / 저장목록 상단 배치 / 한눈 요약 개선</div>
       <p class="muted">입력값은 자동 저장되고, 종목별로 따로 저장해서 다시 불러올 수 있습니다.</p>
     </div>
 
     <div class="card">
-      <h2>시작 방식</h2>
+      <div class="section-head">
+        <h2>시작 방식</h2>
+        <span class="pill">상단 관리형</span>
+      </div>
+
       <div class="grid">
         <div>
           <label for="startMode">시작 방식 선택</label>
@@ -39,6 +43,30 @@
         <div>
           <label for="price">현재 주가</label>
           <input id="price" type="number" step="0.0001" min="0" placeholder="예: 20.5" />
+        </div>
+      </div>
+
+      <div class="top-save-box">
+        <div class="grid-5">
+          <div>
+            <label for="presetName">저장 이름</label>
+            <input id="presetName" type="text" placeholder="예: SOXL 보유중, TQQQ 새진입" />
+          </div>
+          <div class="align-end">
+            <button class="warning full-btn" id="savePresetBtn">현재 설정 저장</button>
+          </div>
+          <div>
+            <label for="presetSelect">저장된 설정 목록</label>
+            <select id="presetSelect">
+              <option value="">저장된 설정을 선택하세요</option>
+            </select>
+          </div>
+          <div class="align-end">
+            <button class="primary full-btn" id="loadPresetBtn">선택 불러오기</button>
+          </div>
+          <div class="align-end">
+            <button class="danger-btn full-btn" id="deletePresetBtn">선택 삭제</button>
+          </div>
         </div>
       </div>
 
@@ -129,30 +157,6 @@
       <div class="save-info" id="saveStatus">입력값 자동 저장 대기중</div>
     </div>
 
-    <div class="card">
-      <div class="section-head">
-        <h2>종목별 저장</h2>
-        <span class="pill">저장 기능</span>
-      </div>
-
-      <div class="grid save-grid">
-        <div>
-          <label for="presetName">저장 이름</label>
-          <input id="presetName" type="text" placeholder="예: SOXL 보유중, TQQQ 새진입" />
-        </div>
-        <div class="save-btn-wrap">
-          <button class="warning full-btn" id="savePresetBtn">현재 설정 저장</button>
-        </div>
-      </div>
-
-      <div class="note">
-        <strong>이 기능은 이렇게 씁니다:</strong>
-        <p>새로 시작용 설정도 저장할 수 있고, 이미 보유 중인 종목 상태도 저장해둘 수 있습니다. 다음에 불러오면 입력값이 자동으로 채워집니다.</p>
-      </div>
-
-      <div id="presetList" class="preset-list"></div>
-    </div>
-
     <div class="card" id="resultCard" style="display:none;">
       <h2 id="resultTitle">계산 결과</h2>
 
@@ -196,6 +200,21 @@
         <div class="stat profit-stat">
           <div class="k">최종 예상 수익률</div>
           <div class="v" id="finalProfitRate">-</div>
+        </div>
+      </div>
+
+      <div class="quick-summary-grid">
+        <div class="quick-card">
+          <div class="quick-card-head">
+            <h3>계획 한눈 요약</h3>
+          </div>
+          <div id="planSummaryView" class="quick-list"></div>
+        </div>
+        <div class="quick-card">
+          <div class="quick-card-head">
+            <h3>익절 시나리오 한눈 요약</h3>
+          </div>
+          <div id="scenarioSummaryView" class="quick-list"></div>
         </div>
       </div>
 
@@ -248,16 +267,8 @@
         </table>
       </div>
 
-      <div class="copy-wrap">
-        <div>
-          <label for="planText">계획 요약 미리보기</label>
-          <textarea id="planText" readonly></textarea>
-        </div>
-        <div>
-          <label for="scenarioText">익절 시나리오 요약 미리보기</label>
-          <textarea id="scenarioText" readonly></textarea>
-        </div>
-      </div>
+      <textarea id="planText" class="hidden-copy"></textarea>
+      <textarea id="scenarioText" class="hidden-copy"></textarea>
 
       <div class="note" id="simpleGuide"></div>
       <div class="footer">※ 참고용 계산기이며 수수료, 세금, 슬리피지는 제외한 단순 계산입니다.</div>
