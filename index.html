@@ -10,14 +10,21 @@
   <div class="wrap">
     <div class="card hero-card">
       <h1>갱이 매매법 물타기 계산기</h1>
-      <p>현재 주가와 총 시드금액만 넣으면, 진입부터 5차까지 추가 매수 가격과 수량을 쉽게 계산합니다.</p>
-      <div class="badge">v5 / 종목 저장 / 웹사이트형 / 아이패드·노트북 최적화</div>
+      <p>새로 시작할 때도, 이미 보유 중인 상태에서 추가 물타기 계획을 짤 때도 사용할 수 있습니다.</p>
+      <div class="badge">v6 / 보유 상태 시작 지원 / 종목 저장 / 웹사이트형</div>
       <p class="muted">입력값은 자동 저장되고, 종목별로 따로 저장해서 다시 불러올 수 있습니다.</p>
     </div>
 
     <div class="card">
-      <h2>기본 입력</h2>
+      <h2>시작 방식</h2>
       <div class="grid">
+        <div>
+          <label for="startMode">시작 방식 선택</label>
+          <select id="startMode">
+            <option value="fresh">새로 시작</option>
+            <option value="holding">보유 상태에서 시작</option>
+          </select>
+        </div>
         <div>
           <label for="stockName">종목명</label>
           <input id="stockName" type="text" placeholder="예: SOXL, TQQQ, 삼성전자" />
@@ -33,14 +40,37 @@
           <label for="price">현재 주가</label>
           <input id="price" type="number" step="0.0001" min="0" placeholder="예: 20.5" />
         </div>
-        <div>
-          <label for="seed">총 시드금액</label>
-          <input id="seed" type="number" step="0.01" min="0" placeholder="예: 10000" />
+      </div>
+
+      <div id="freshFields" class="mode-box">
+        <div class="grid">
+          <div>
+            <label for="seed">총 시드금액</label>
+            <input id="seed" type="number" step="0.01" min="0" placeholder="예: 10000" />
+          </div>
         </div>
       </div>
+
+      <div id="holdingFields" class="mode-box">
+        <div class="grid">
+          <div>
+            <label for="holdingAvgPrice">현재 보유 단가</label>
+            <input id="holdingAvgPrice" type="number" step="0.0001" min="0" placeholder="예: 18.2" />
+          </div>
+          <div>
+            <label for="holdingQty">현재 보유 수량</label>
+            <input id="holdingQty" type="number" step="0.0001" min="0" placeholder="예: 30" />
+          </div>
+          <div>
+            <label for="remainingSeed">남아있는 시드금액</label>
+            <input id="remainingSeed" type="number" step="0.01" min="0" placeholder="예: 5000" />
+          </div>
+        </div>
+      </div>
+
       <div class="note">
         <strong>아주 쉽게 설명하면:</strong>
-        <p>현재 가격을 시작점으로 잡고, 주가가 내려올 때 미리 정한 자리마다 나눠서 사는 계산기입니다. 총 예산을 넣으면 그 돈 안에서 5차까지 가능하도록 첫 수량을 자동 계산합니다.</p>
+        <p>새로 시작은 처음부터 계획을 짜는 방식이고, 보유 상태 시작은 이미 들고 있는 수량과 평단을 먼저 반영한 뒤 남은 시드로 추가 물타기 계획을 계산하는 방식입니다.</p>
       </div>
     </div>
 
@@ -102,13 +132,13 @@
     <div class="card">
       <div class="section-head">
         <h2>종목별 저장</h2>
-        <span class="pill">새 기능</span>
+        <span class="pill">저장 기능</span>
       </div>
 
       <div class="grid save-grid">
         <div>
           <label for="presetName">저장 이름</label>
-          <input id="presetName" type="text" placeholder="예: SOXL 기본전략, TQQQ 공격형" />
+          <input id="presetName" type="text" placeholder="예: SOXL 보유중, TQQQ 새진입" />
         </div>
         <div class="save-btn-wrap">
           <button class="warning full-btn" id="savePresetBtn">현재 설정 저장</button>
@@ -117,7 +147,7 @@
 
       <div class="note">
         <strong>이 기능은 이렇게 씁니다:</strong>
-        <p>지금 입력한 종목과 시드, 익절 설정을 이름 붙여 저장해두고 다음에 바로 불러올 수 있습니다. 예를 들어 SOXL용, TQQQ용을 따로 저장해둘 수 있습니다.</p>
+        <p>새로 시작용 설정도 저장할 수 있고, 이미 보유 중인 종목 상태도 저장해둘 수 있습니다. 다음에 불러오면 입력값이 자동으로 채워집니다.</p>
       </div>
 
       <div id="presetList" class="preset-list"></div>
@@ -128,11 +158,15 @@
 
       <div class="summary">
         <div class="stat">
-          <div class="k">자동 기준 수량</div>
+          <div class="k">추가매수 기준 수량</div>
           <div class="v" id="baseQty">-</div>
         </div>
         <div class="stat">
-          <div class="k">총 예상 투입금</div>
+          <div class="k">기존 보유 금액</div>
+          <div class="v" id="existingCost">-</div>
+        </div>
+        <div class="stat">
+          <div class="k">추가 매수 총액</div>
           <div class="v" id="totalCost">-</div>
         </div>
         <div class="stat">
@@ -140,7 +174,11 @@
           <div class="v" id="remainCash">-</div>
         </div>
         <div class="stat">
-          <div class="k">최종 누적 평단</div>
+          <div class="k">최종 합산 수량</div>
+          <div class="v" id="finalQty">-</div>
+        </div>
+        <div class="stat">
+          <div class="k">최종 합산 평단</div>
           <div class="v" id="finalAvg">-</div>
         </div>
         <div class="stat">
@@ -171,9 +209,9 @@
               <th>배수</th>
               <th>매수 수량</th>
               <th>투입금</th>
-              <th>누적 수량</th>
-              <th>누적 투입금</th>
-              <th>누적 평단</th>
+              <th>합산 수량</th>
+              <th>합산 투입금</th>
+              <th>합산 평단</th>
               <th>+3%</th>
               <th>+5%</th>
               <th>+10%</th>
@@ -193,8 +231,8 @@
           <thead>
             <tr>
               <th>기준 단계</th>
-              <th>누적 수량</th>
-              <th>누적 평단</th>
+              <th>합산 수량</th>
+              <th>합산 평단</th>
               <th>선택 익절가</th>
               <th>남길 수량</th>
               <th>매도 수량</th>
