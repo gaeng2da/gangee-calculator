@@ -1,5 +1,5 @@
-const KEY_AUTO = "gangee_unified_auto_v2";
-const KEY_PRESETS = "gangee_unified_presets_v2";
+const KEY_AUTO = "gangee_unified_auto_v3";
+const KEY_PRESETS = "gangee_unified_presets_v3";
 
 const S = {
   activeTab: "averaging"
@@ -122,7 +122,8 @@ function collectValues() {
     infTargetRate: $("infTargetRate").value,
     infCustomTargetRate: $("infCustomTargetRate").value,
     infMinBuyQty: $("infMinBuyQty").value,
-    infUseMinQty: $("infUseMinQty").value
+    infUseMinQty: $("infUseMinQty").value,
+    infWarningThreshold: $("infWarningThreshold").value
   };
 }
 
@@ -147,6 +148,7 @@ function applyValues(v) {
   $("infCustomTargetRate").value = v.infCustomTargetRate || "";
   $("infMinBuyQty").value = v.infMinBuyQty || "2";
   $("infUseMinQty").value = v.infUseMinQty || "yes";
+  $("infWarningThreshold").value = v.infWarningThreshold || "2";
   setActiveTab(v.activeTab || "averaging");
   toggleStartModeFields();
   toggleAvgFields();
@@ -499,68 +501,129 @@ function calculateInfinite() {
   const { startMode, currentPrice, existingQty, existingCost, availableSeed } = getBaseAccountState();
   const stockName = $("stockName").value.trim();
   const splitCount = parseInt($("infSplitCount").value || "40", 10);
-  const minBuyQty = parseInt($("infMinBuyQty").value || "2", 10);
+  const minBuyQty = parseFloat($("infMinBuyQty").value || "2");
   const useMinQty = $("infUseMinQty").value === "yes";
   const takeMode = $("infTakeMode").value;
   const selectedRate = getInfSelectedRate();
+  const warningThreshold = parseInt($("infWarningThreshold").value || "2", 10);
 
   if (!splitCount || splitCount <= 0) throw new Error("분할 수를 올바르게 입력해주세요.");
   if (!minBuyQty || minBuyQty <= 0) throw new Error("하루 최소 매수 기준을 올바르게 입력해주세요.");
+  if (!warningThreshold || warningThreshold <= 0) throw new Error("시드 경고 기준을 올바르게 입력해주세요.");
   if (selectedRate < 0) throw new Error("익절 목표 퍼센트는 0 이상으로 입력해주세요.");
 
   const unitSeed = availableSeed / splitCount;
   const theoreticalBuyQty = unitSeed / currentPrice;
-  const actualBuyQty = useMinQty ? Math.max(theoreticalBuyQty, minBuyQty) : theoreticalBuyQty;
-  const todayBuyCost = actualBuyQty * currentPrice;
+  const plannedQty = useMinQty ? Math.max(theoreticalBuyQty, minBuyQty) : theoreticalBuyQty;
+  const plannedCost = plannedQty * currentPrice;
+  const maxAffordableQty = availableSeed / currentPrice;
 
-  const totalCostAfterToday = existingCost + todayBuyCost;
-  const totalQtyAfterToday = existingQty + actualBuyQty;
-  const avgAfterToday = totalQtyAfterToday > 0 ? totalCostAfterToday / totalQtyAfterToday : 0;
-  const targetPrice = avgAfterToday * (1 + selectedRate / 100);
+  let actualBuyQty = 0;
+  let buyCost = 0;
+  let canFullyBuy = false;
+  let canPartiallyBuy = false;
+  let buyRule = "매수 불가";
 
-  const usedSplitsEstimate = Math.min(
+  if (availableSeed >= plannedCost) {
+    actualBuyQty = plannedQty;
+    buyCost = actualBuyQty * currentPrice;
+    canFullyBuy = true;
+    buyRule = useMinQty && plannedQty > theoreticalBuyQty ? `최소 ${fmtNum(minBuyQty, 4)}주 적용` : "1분할 기준";
+  } else if (maxAffordableQty > 0) {
+    actualBuyQty = maxAffordableQty;
+    buyCost = actualBuyQty * currentPrice;
+    canPartiallyBuy = true;
+    buyRule = "시드 부족으로 축소 매수";
+  }
+
+  const totalQtyAfterBuy = existingQty + actualBuyQty;
+  const totalCostAfterBuy = existingCost + buyCost;
+  const avgAfterBuy = totalQtyAfterBuy > 0 ? totalCostAfterBuy / totalQtyAfterBuy : 0;
+  const targetPrice = avgAfterBuy * (1 + selectedRate / 100);
+
+  const estimatedUsedSplits = Math.min(
     Math.floor(existingCost > 0 ? existingCost / unitSeed : 0),
     splitCount
   );
-  const usedSplitsAfterToday = Math.min(usedSplitsEstimate + 1, splitCount);
-  const remainingSplit = Math.max(splitCount - usedSplitsAfterToday, 0);
-  const remainingCash = Math.max(availableSeed - todayBuyCost, 0);
-  const progressPercent = splitCount > 0 ? (usedSplitsAfterToday / splitCount) * 100 : 0;
 
-  const allSellAmount = totalQtyAfterToday * targetPrice;
-  const profit = allSellAmount - totalCostAfterToday;
-  const profitRate = totalCostAfterToday > 0 ? (profit / totalCostAfterToday) * 100 : 0;
+  const usedSplitsAfterAction = canFullyBuy || canPartiallyBuy
+    ? Math.min(estimatedUsedSplits + 1, splitCount)
+    : estimatedUsedSplits;
 
-  let actionText = "매수";
-  let actionReason = "현재 기준으로 오늘 1회 분할 매수를 진행하는 계산입니다.";
+  const remainingSplit = Math.max(splitCount - usedSplitsAfterAction, 0);
+  const remainingCash = Math.max(availableSeed - buyCost, 0);
+  const additionalBuyCapacity = plannedCost > 0 ? remainingCash / plannedCost : 0;
+  const progressPercent = splitCount > 0 ? (usedSplitsAfterAction / splitCount) * 100 : 0;
 
-  if (currentPrice >= targetPrice) {
+  const exitNowPossible = currentPrice >= targetPrice && targetPrice > 0;
+  const allSellAmount = totalQtyAfterBuy * targetPrice;
+  const profit = allSellAmount - totalCostAfterBuy;
+  const profitRate = totalCostAfterBuy > 0 ? (profit / totalCostAfterBuy) * 100 : 0;
+
+  let actionType = "hold";
+  let actionText = "대기";
+  let actionReason = "현재 조건상 대기하며 상황을 관찰하는 구간입니다.";
+
+  if (exitNowPossible) {
+    actionType = takeMode === "recover" ? "recover" : "take_profit";
     actionText = takeMode === "recover" ? "원금 회수 검토" : "익절 검토";
-    actionReason = "현재 주가가 계산된 목표 익절가 이상이므로 매도/회수 판단 구간입니다.";
-  } else if (remainingCash <= 0 || remainingSplit <= 0) {
+    actionReason = "현재 주가가 목표 익절가 이상이므로 매도 또는 회수 판단이 가능합니다.";
+  } else if (canFullyBuy) {
+    actionType = "buy";
+    actionText = "매수";
+    actionReason = "남은 시드로 계획 수량을 충분히 감당할 수 있어 정상 분할 매수가 가능합니다.";
+  } else if (canPartiallyBuy) {
+    actionType = "reduced_buy";
+    actionText = "축소 매수";
+    actionReason = "계획 수량 전체는 어렵지만 남은 시드 범위 안에서 일부 수량은 매수 가능합니다.";
+  } else {
+    actionType = "hold";
     actionText = "대기";
-    actionReason = "남은 시드 또는 남은 분할이 부족해 추가 매수 여력이 거의 없습니다.";
+    actionReason = "남은 시드가 부족해 현재 시점에서 추가 매수가 어렵습니다.";
+  }
+
+  let warningText = "";
+  let showWarning = false;
+
+  if (remainingSplit > 0 && additionalBuyCapacity < warningThreshold) {
+    showWarning = true;
+    warningText = `남은 시드 기준 추가 가능 분할 수가 ${fmtNum(additionalBuyCapacity, 2)}회 수준입니다. 현재 전략 지속 여력이 낮아 주의가 필요합니다.`;
+  }
+
+  if (!canFullyBuy && canPartiallyBuy) {
+    showWarning = true;
+    warningText = `시드 부족으로 계획 수량 ${fmtNum(plannedQty, 4)}주를 모두 매수할 수 없어 ${fmtNum(actualBuyQty, 4)}주만 축소 매수합니다.`;
+  }
+
+  if (!canFullyBuy && !canPartiallyBuy && !exitNowPossible) {
+    showWarning = true;
+    warningText = "현재 남은 시드로는 추가 매수가 어렵습니다. 시드 보존 또는 전략 재조정이 필요합니다.";
   }
 
   $("infResultTitle").textContent = stockName ? `갱이 무한매수법 계산 결과 - ${stockName}` : "갱이 무한매수법 계산 결과";
   $("infUnitSeed").textContent = fmtMoney(unitSeed);
   $("infExistingCost").textContent = fmtMoney(existingCost);
   $("infExistingQty").textContent = fmtNum(existingQty, 4) + "주";
-  $("infCurrentAvg").textContent = totalQtyAfterToday > 0 ? fmtMoney(avgAfterToday) : "-";
+  $("infCurrentAvg").textContent = avgAfterBuy > 0 ? fmtMoney(avgAfterBuy) : "-";
   $("infTodayBuyQty").textContent = fmtNum(actualBuyQty, 4) + "주";
-  $("infTodayBuyCost").textContent = fmtMoney(todayBuyCost);
+  $("infTodayBuyCost").textContent = fmtMoney(buyCost);
   $("infRemainingSplit").textContent = fmtNum(remainingSplit, 0) + "개";
   $("infRemainingCash").textContent = fmtMoney(remainingCash);
-  $("infTargetPrice").textContent = fmtMoney(targetPrice);
-  $("infProfitRate").textContent = fmtPercent(profitRate);
+  $("infTargetPrice").textContent = targetPrice > 0 ? fmtMoney(targetPrice) : "-";
+  $("infProfitRate").textContent = totalCostAfterBuy > 0 ? fmtPercent(profitRate) : "-";
 
   $("infActionText").textContent = actionText;
   $("infActionReason").textContent = actionReason;
-  $("infSplitProgressText").textContent = `${usedSplitsAfterToday}/${splitCount} 분할 사용`;
-  $("infSplitProgressSub").textContent = `진행률 ${fmtPercent(progressPercent)} / 남은 분할 ${remainingSplit}개`;
+  $("infSplitProgressText").textContent = `${usedSplitsAfterAction}/${splitCount} 분할 사용`;
+  $("infSplitProgressSub").textContent = `진행률 ${fmtPercent(progressPercent)} / 추가 가능 분할 ${fmtNum(additionalBuyCapacity, 2)}회`;
   $("infProgressBar").style.width = `${Math.min(progressPercent, 100)}%`;
-  $("infBuyCalcMain").textContent = `${fmtNum(actualBuyQty, 4)}주 매수`;
-  $("infBuyCalcSub").textContent = `이론상 ${fmtNum(theoreticalBuyQty, 4)}주 / ${useMinQty ? `최소 ${minBuyQty}주 규칙 적용` : "최소 매수 규칙 미적용"}`;
+
+  $("infBuyCalcMain").textContent = `${fmtNum(actualBuyQty, 4)}주 ${actionType === "take_profit" || actionType === "recover" ? "기준 상태" : "적용"}`;
+  $("infBuyCalcSub").textContent =
+    `이론상 ${fmtNum(theoreticalBuyQty, 4)}주 / 계획 ${fmtNum(plannedQty, 4)}주 / 최대 가능 ${fmtNum(maxAffordableQty, 4)}주 / ${buyRule}`;
+
+  $("infWarningBox").classList.toggle("hidden", !showWarning);
+  $("infWarningText").textContent = warningText || "-";
 
   const planRows = [];
   let runQty = existingQty;
@@ -568,24 +631,37 @@ function calculateInfinite() {
   let runCash = availableSeed;
 
   for (let i = 1; i <= Math.min(splitCount, 12); i++) {
-    const theoreticalQty = unitSeed / currentPrice;
-    const buyQty = useMinQty ? Math.max(theoreticalQty, minBuyQty) : theoreticalQty;
-    const buyCost = buyQty * currentPrice;
-    runQty += buyQty;
-    runCost += buyCost;
-    runCash -= buyCost;
-    const avg = runCost / runQty;
+    const theoQty = unitSeed / currentPrice;
+    const planQty = useMinQty ? Math.max(theoQty, minBuyQty) : theoQty;
+    const maxQty = runCash / currentPrice;
+
+    let appliedQty = 0;
+    let appliedRule = "매수 불가";
+    if (runCash >= planQty * currentPrice) {
+      appliedQty = planQty;
+      appliedRule = useMinQty && planQty > theoQty ? `최소 ${fmtNum(minBuyQty, 4)}주 적용` : "1분할 기준";
+    } else if (maxQty > 0) {
+      appliedQty = maxQty;
+      appliedRule = "시드 부족으로 축소 매수";
+    }
+
+    const cost = appliedQty * currentPrice;
+    runQty += appliedQty;
+    runCost += cost;
+    runCash -= cost;
+    const avg = runQty > 0 ? runCost / runQty : 0;
+
     planRows.push({
       step: i,
       price: currentPrice,
-      theoreticalQty,
-      buyQty,
-      cost: buyCost,
+      theoreticalQty: theoQty,
+      actualQty: appliedQty,
+      cost,
       totalQty: runQty,
       avg,
       cash: Math.max(runCash, 0),
       remainSplit: Math.max(splitCount - i, 0),
-      rule: useMinQty && buyQty > theoreticalQty ? `최소 ${minBuyQty}주 적용` : "1분할 기준"
+      rule: appliedRule
     });
   }
 
@@ -594,7 +670,7 @@ function calculateInfinite() {
       <td>${r.step}회차</td>
       <td>${fmtMoney(r.price)}</td>
       <td>${fmtNum(r.theoreticalQty, 4)}주</td>
-      <td>${fmtNum(r.buyQty, 4)}주</td>
+      <td>${fmtNum(r.actualQty, 4)}주</td>
       <td>${fmtMoney(r.cost)}</td>
       <td>${fmtNum(r.totalQty, 4)}주</td>
       <td>${fmtMoney(r.avg)}</td>
@@ -604,21 +680,17 @@ function calculateInfinite() {
     </tr>
   `).join("");
 
-  const scenarioRows = [];
-  let cumulativeCost = existingCost;
-
-  planRows.forEach((r, idx) => {
-    cumulativeCost += idx === 0 ? r.cost : planRows[idx].cost;
+  const scenarioRows = planRows.map(r => {
     const tp = r.avg * (1 + selectedRate / 100);
     const sellAllAmount = r.totalQty * tp;
-    const p = sellAllAmount - r.avg * r.totalQty;
+    const p = sellAllAmount - (r.avg * r.totalQty);
     const pr = r.avg * r.totalQty > 0 ? (p / (r.avg * r.totalQty)) * 100 : 0;
-    const recoverQty = Math.min((r.avg * r.totalQty) / tp, r.totalQty);
+    const recoverQty = tp > 0 ? Math.min((r.avg * r.totalQty) / tp, r.totalQty) : 0;
     const remainQty = Math.max(r.totalQty - recoverQty, 0);
     const remainValue = remainQty * tp;
 
-    scenarioRows.push({
-      step: idx + 1,
+    return {
+      step: r.step,
       totalQty: r.totalQty,
       avg: r.avg,
       tp,
@@ -627,7 +699,7 @@ function calculateInfinite() {
       recoverQty,
       remainQty,
       remainValue
-    });
+    };
   });
 
   $("infScenarioBody").innerHTML = scenarioRows.map(r => `
@@ -648,21 +720,21 @@ function calculateInfinite() {
     { label: "오늘 행동", value: actionText },
     { label: "현재 주가", value: fmtMoney(currentPrice) },
     { label: "1분할 금액", value: fmtMoney(unitSeed) },
-    { label: "이론상 매수 수량", value: fmtNum(theoreticalBuyQty, 4) + "주" },
-    { label: "실제 매수 수량", value: fmtNum(actualBuyQty, 4) + "주" },
-    { label: "오늘 매수 금액", value: fmtMoney(todayBuyCost) },
-    { label: "오늘 매수 후 평단", value: fmtMoney(avgAfterToday) },
-    { label: "남은 시드", value: fmtMoney(remainingCash) },
-    { label: "남은 분할", value: fmtNum(remainingSplit, 0) + "개" }
+    { label: "이론상 수량", value: fmtNum(theoreticalBuyQty, 4) + "주" },
+    { label: "계획 수량", value: fmtNum(plannedQty, 4) + "주" },
+    { label: "실제 수량", value: fmtNum(actualBuyQty, 4) + "주" },
+    { label: "오늘 매수 금액", value: fmtMoney(buyCost) },
+    { label: "매수 후 남은 시드", value: fmtMoney(remainingCash) },
+    { label: "추가 가능 분할 수", value: fmtNum(additionalBuyCapacity, 2) + "회" }
   ]);
 
   renderQuickList("infScenarioSummaryView", [
-    { label: "익절 목표가", value: fmtMoney(targetPrice) },
-    { label: "전량 매도 예상 수익", value: fmtMoney(profit) },
-    { label: "예상 수익률", value: fmtPercent(profitRate) },
-    { label: "원금 회수 필요 매도수량", value: fmtNum(Math.min(totalCostAfterToday / targetPrice, totalQtyAfterToday), 4) + "주" },
-    { label: "원금 회수 후 남는 수량", value: fmtNum(Math.max(totalQtyAfterToday - Math.min(totalCostAfterToday / targetPrice, totalQtyAfterToday), 0), 4) + "주" },
-    { label: "원금 회수 후 남는 평가금액", value: fmtMoney(Math.max(totalQtyAfterToday - Math.min(totalCostAfterToday / targetPrice, totalQtyAfterToday), 0) * targetPrice) }
+    { label: "익절 목표가", value: targetPrice > 0 ? fmtMoney(targetPrice) : "-" },
+    { label: "전량 매도 예상 수익", value: totalCostAfterBuy > 0 ? fmtMoney(profit) : "-" },
+    { label: "예상 수익률", value: totalCostAfterBuy > 0 ? fmtPercent(profitRate) : "-" },
+    { label: "원금 회수 필요 매도수량", value: targetPrice > 0 ? fmtNum(Math.min(totalCostAfterBuy / targetPrice, totalQtyAfterBuy), 4) + "주" : "-" },
+    { label: "원금 회수 후 남는 수량", value: targetPrice > 0 ? fmtNum(Math.max(totalQtyAfterBuy - Math.min(totalCostAfterBuy / targetPrice, totalQtyAfterBuy), 0), 4) + "주" : "-" },
+    { label: "원금 회수 후 남는 평가금액", value: targetPrice > 0 ? fmtMoney(Math.max(totalQtyAfterBuy - Math.min(totalCostAfterBuy / targetPrice, totalQtyAfterBuy), 0) * targetPrice) : "-" }
   ]);
 
   $("planText").value = [
@@ -671,14 +743,14 @@ function calculateInfinite() {
     `분할 수: ${splitCount}`,
     `1분할 금액: ${fmtMoney(unitSeed)}`,
     `오늘 행동: ${actionText}`,
-    `이론상 매수 수량: ${fmtNum(theoreticalBuyQty, 4)}주`,
-    `실제 매수 수량: ${fmtNum(actualBuyQty, 4)}주`,
-    `오늘 매수 금액: ${fmtMoney(todayBuyCost)}`,
-    `오늘 매수 후 평단: ${fmtMoney(avgAfterToday)}`,
-    `익절 목표가: ${fmtMoney(targetPrice)}`,
-    `남은 분할: ${remainingSplit}개`,
+    `이론상 수량: ${fmtNum(theoreticalBuyQty, 4)}주`,
+    `계획 수량: ${fmtNum(plannedQty, 4)}주`,
+    `실제 수량: ${fmtNum(actualBuyQty, 4)}주`,
+    `매수 금액: ${fmtMoney(buyCost)}`,
     `남은 시드: ${fmtMoney(remainingCash)}`,
-    `예상 수익률: ${fmtPercent(profitRate)}`
+    `추가 가능 분할 수: ${fmtNum(additionalBuyCapacity, 2)}회`,
+    `익절 목표가: ${targetPrice > 0 ? fmtMoney(targetPrice) : "-"}`,
+    `예상 수익률: ${totalCostAfterBuy > 0 ? fmtPercent(profitRate) : "-"}`
   ].join("\n");
 
   $("scenarioText").value = scenarioRows.map(r =>
@@ -723,12 +795,14 @@ function resetForm() {
   $("infCustomTargetRate").value = "";
   $("infMinBuyQty").value = "2";
   $("infUseMinQty").value = "yes";
+  $("infWarningThreshold").value = "2";
   $("presetName").value = "";
   $("planText").value = "";
   $("scenarioText").value = "";
   $("avgResultCard").classList.add("hidden");
   $("infResultCard").classList.add("hidden");
   $("infProgressBar").style.width = "0%";
+  $("infWarningBox").classList.add("hidden");
   localStorage.removeItem(KEY_AUTO);
   toggleStartModeFields();
   toggleAvgFields();
@@ -747,7 +821,8 @@ function bindEvents() {
   [
     "stockName", "currency", "price", "seed", "holdingAvgPrice", "holdingQty", "remainingSeed",
     "avgTakeMode", "avgTargetType", "avgTargetRate", "avgCustomTargetRate", "avgCustomRemainQty",
-    "infSplitCount", "infTakeMode", "infTargetType", "infTargetRate", "infCustomTargetRate", "infMinBuyQty", "infUseMinQty"
+    "infSplitCount", "infTakeMode", "infTargetType", "infTargetRate", "infCustomTargetRate",
+    "infMinBuyQty", "infUseMinQty", "infWarningThreshold"
   ].forEach(id => {
     $(id).addEventListener("input", saveAuto);
     $(id).addEventListener("change", () => {
