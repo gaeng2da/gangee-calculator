@@ -9,7 +9,7 @@ body {
 }
 
 .wrap {
-  max-width: 1420px;
+  max-width: 1480px;
   margin: 0 auto;
   padding: 18px;
 }
@@ -81,6 +81,31 @@ p {
   margin-top: 20px;
 }
 
+.tab-row {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.tab-btn {
+  border: 1px solid #334155;
+  background: #0b1220;
+  color: #cbd5e1;
+  min-height: 50px;
+  padding: 12px 18px;
+  border-radius: 14px;
+  font-size: 15px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.tab-btn.active {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+
 .grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -148,7 +173,7 @@ input:focus, select:focus, textarea:focus {
   box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.15);
 }
 
-input:disabled {
+input:disabled, select:disabled {
   opacity: 0.6;
 }
 
@@ -156,7 +181,7 @@ input:disabled {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
-  margin-top: 16px;
+  margin-top: 6px;
 }
 
 button {
@@ -298,7 +323,7 @@ button:hover {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 1450px;
+  min-width: 1400px;
   background: #111827;
 }
 
@@ -335,20 +360,10 @@ tr:hover td {
   margin-top: 12px;
 }
 
-.ok { color: #86efac; }
-.warn { color: #fbbf24; }
-.danger { color: #fca5a5; }
-
 .save-info {
   font-size: 14px;
   color: #93c5fd;
-  margin-top: 10px;
-}
-
-.footer {
-  color: #9ca3af;
-  font-size: 13px;
-  margin-top: 10px;
+  margin-top: 12px;
 }
 
 .hidden {
@@ -405,10 +420,7 @@ tr:hover td {
 }
 
 @media (max-width: 560px) {
-  body {
-    line-height: 1.55;
-  }
-
+  body { line-height: 1.55; }
   h1 { font-size: 22px; }
   h2 { font-size: 18px; }
   h3 { font-size: 16px; }
@@ -427,7 +439,7 @@ tr:hover td {
     font-size: 16px;
   }
 
-  .btns {
+  .btns, .tab-row {
     flex-direction: column;
   }
 
