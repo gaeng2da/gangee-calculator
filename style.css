@@ -315,6 +315,26 @@ button:hover {
   transition: width 0.3s ease;
 }
 
+.warning-box {
+  margin-top: 14px;
+  border-radius: 16px;
+  padding: 14px 16px;
+  border: 1px solid rgba(245, 158, 11, 0.45);
+  background: rgba(120, 53, 15, 0.22);
+}
+
+.warning-title {
+  color: #fbbf24;
+  font-size: 15px;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.warning-text {
+  color: #fde68a;
+  font-size: 14px;
+}
+
 .quick-summary-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
