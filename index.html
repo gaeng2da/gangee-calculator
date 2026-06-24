@@ -11,7 +11,7 @@
     <div class="card hero-card">
       <h1>갱이 투자 계산기</h1>
       <p>한 개의 웹에서 갱이 매매법 물타기 계산기와 갱이 무한매수법 계산기를 선택해서 사용할 수 있습니다.</p>
-      <div class="badge">통합 버전 / 저장 지원 / 웹사이트형 / 아이패드·노트북 최적화</div>
+      <div class="badge">통합 버전 / 무한매수법 v2 고도화 / 저장 지원 / 아이패드·노트북 최적화</div>
       <p class="muted">설정은 자동 저장되고, 계산기 종류별로 저장/불러오기가 가능합니다.</p>
     </div>
 
@@ -162,7 +162,7 @@
     <div class="card hidden" id="infiniteSection">
       <div class="section-head">
         <h2>갱이 무한매수법 계산기 설정</h2>
-        <span class="pill">무한매수</span>
+        <span class="pill">무한매수 v2</span>
       </div>
 
       <div class="grid-4">
@@ -202,11 +202,18 @@
           <label for="infMinBuyQty">하루 최소 매수 기준</label>
           <input id="infMinBuyQty" type="number" step="1" min="1" value="2" />
         </div>
+        <div>
+          <label for="infUseMinQty">최소 매수 기준 적용</label>
+          <select id="infUseMinQty">
+            <option value="yes">사용</option>
+            <option value="no">미사용</option>
+          </select>
+        </div>
       </div>
 
       <div class="note">
         <strong>무한매수법 쉽게 설명:</strong>
-        <p>총 시드를 여러 분할로 나누고, 현재 상태를 기준으로 반복해서 매수/관리/익절하는 계산기입니다. 오늘 얼마를 사야 하는지, 남은 분할과 남은 시드를 함께 봅니다.</p>
+        <p>총 시드를 여러 분할로 나누고, 현재 상태를 기준으로 반복해서 매수/관리/익절하는 계산기입니다. 오늘 무엇을 해야 하는지, 남은 분할과 남은 시드를 함께 봅니다.</p>
       </div>
     </div>
 
@@ -313,13 +320,34 @@
         <div class="stat profit-stat"><div class="k">예상 수익률</div><div class="v" id="infProfitRate">-</div></div>
       </div>
 
+      <div class="action-card-row">
+        <div class="action-card">
+          <div class="action-title">오늘 해야 할 행동</div>
+          <div class="action-value" id="infActionText">-</div>
+          <div class="action-sub" id="infActionReason">-</div>
+        </div>
+        <div class="action-card">
+          <div class="action-title">분할 진행 상태</div>
+          <div class="action-value" id="infSplitProgressText">-</div>
+          <div class="progress-wrap">
+            <div class="progress-bar" id="infProgressBar"></div>
+          </div>
+          <div class="action-sub" id="infSplitProgressSub">-</div>
+        </div>
+        <div class="action-card">
+          <div class="action-title">오늘 매수 계산</div>
+          <div class="action-value" id="infBuyCalcMain">-</div>
+          <div class="action-sub" id="infBuyCalcSub">-</div>
+        </div>
+      </div>
+
       <div class="quick-summary-grid">
         <div class="quick-card">
-          <div class="quick-card-head"><h3>오늘 해야 할 행동</h3></div>
+          <div class="quick-card-head"><h3>오늘 행동 한눈 요약</h3></div>
           <div id="infPlanSummaryView" class="quick-list"></div>
         </div>
         <div class="quick-card">
-          <div class="quick-card-head"><h3>사이클 한눈 요약</h3></div>
+          <div class="quick-card-head"><h3>익절/원금회수 한눈 요약</h3></div>
           <div id="infScenarioSummaryView" class="quick-list"></div>
         </div>
       </div>
@@ -331,12 +359,14 @@
             <tr>
               <th>회차</th>
               <th>기준 가격</th>
-              <th>매수 수량</th>
+              <th>이론상 수량</th>
+              <th>실제 매수 수량</th>
               <th>매수 금액</th>
               <th>누적 수량</th>
               <th>누적 평단</th>
               <th>남은 시드</th>
               <th>남은 분할</th>
+              <th>적용 기준</th>
             </tr>
           </thead>
           <tbody id="infTbody"></tbody>
@@ -356,6 +386,7 @@
               <th>예상 수익률</th>
               <th>원금 회수 필요 매도수량</th>
               <th>원금 회수 후 남는 수량</th>
+              <th>원금 회수 후 남는 평가금액</th>
             </tr>
           </thead>
           <tbody id="infScenarioBody"></tbody>
