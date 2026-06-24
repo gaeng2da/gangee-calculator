@@ -1,44 +1,8 @@
-const KEY_AUTO = "gangee_calc_v61_auto";
-const KEY_PRESETS = "gangee_calc_v61_presets";
+const KEY_AUTO = "gangee_unified_auto_v1";
+const KEY_PRESETS = "gangee_unified_presets_v1";
 
-const ids = {
-  startMode: "startMode",
-  stockName: "stockName",
-  currency: "currency",
-  price: "price",
-  seed: "seed",
-  holdingAvgPrice: "holdingAvgPrice",
-  holdingQty: "holdingQty",
-  remainingSeed: "remainingSeed",
-  freshFields: "freshFields",
-  holdingFields: "holdingFields",
-  takeMode: "takeMode",
-  targetType: "targetType",
-  targetRate: "targetRate",
-  customTargetRate: "customTargetRate",
-  customRemainQty: "customRemainQty",
-  presetName: "presetName",
-  presetSelect: "presetSelect",
-  saveStatus: "saveStatus",
-  resultCard: "resultCard",
-  resultTitle: "resultTitle",
-  baseQty: "baseQty",
-  existingCost: "existingCost",
-  totalCost: "totalCost",
-  remainCash: "remainCash",
-  finalQty: "finalQty",
-  finalAvg: "finalAvg",
-  selectedTarget: "selectedTarget",
-  selectedTargetPrice: "selectedTargetPrice",
-  finalProfit: "finalProfit",
-  finalProfitRate: "finalProfitRate",
-  tbody: "tbody",
-  scenarioBody: "scenarioBody",
-  planText: "planText",
-  scenarioText: "scenarioText",
-  simpleGuide: "simpleGuide",
-  planSummaryView: "planSummaryView",
-  scenarioSummaryView: "scenarioSummaryView"
+const S = {
+  activeTab: "averaging"
 };
 
 function $(id) {
@@ -46,10 +10,8 @@ function $(id) {
 }
 
 function getCurrencyInfo() {
-  const currency = $(ids.currency).value;
-  if (currency === "KRW") {
-    return { symbol: "₩", locale: "ko-KR" };
-  }
+  const currency = $("currency").value;
+  if (currency === "KRW") return { symbol: "₩", locale: "ko-KR" };
   return { symbol: "$", locale: "en-US" };
 }
 
@@ -75,7 +37,57 @@ function fmtPercent(v) {
   }) + "%";
 }
 
-function getPlan(price) {
+function setActiveTab(tab) {
+  S.activeTab = tab;
+
+  $("tabAveraging").classList.toggle("active", tab === "averaging");
+  $("tabInfinite").classList.toggle("active", tab === "infinite");
+
+  $("averagingSection").classList.toggle("hidden", tab !== "averaging");
+  $("infiniteSection").classList.toggle("hidden", tab !== "infinite");
+
+  $("avgResultCard").classList.add("hidden");
+  $("infResultCard").classList.add("hidden");
+
+  $("calculatorType").value = tab === "averaging" ? "갱이 매매법 계산기" : "갱이 무한매수법 계산기";
+  saveAuto();
+}
+
+function toggleStartModeFields() {
+  const mode = $("startMode").value;
+  $("freshFields").classList.toggle("hidden", mode !== "fresh");
+  $("holdingFields").classList.toggle("hidden", mode !== "holding");
+}
+
+function toggleAvgFields() {
+  const targetType = $("avgTargetType").value;
+  const takeMode = $("avgTakeMode").value;
+  $("avgCustomTargetRate").disabled = targetType !== "custom";
+  $("avgTargetRate").disabled = targetType !== "preset";
+  $("avgCustomRemainQty").disabled = takeMode !== "custom";
+}
+
+function toggleInfFields() {
+  const targetType = $("infTargetType").value;
+  $("infCustomTargetRate").disabled = targetType !== "custom";
+  $("infTargetRate").disabled = targetType !== "preset";
+}
+
+function getAvgSelectedRate() {
+  if ($("avgTargetType").value === "custom") {
+    return parseFloat($("avgCustomTargetRate").value || "0");
+  }
+  return parseFloat($("avgTargetRate").value || "0");
+}
+
+function getInfSelectedRate() {
+  if ($("infTargetType").value === "custom") {
+    return parseFloat($("infCustomTargetRate").value || "0");
+  }
+  return parseFloat($("infTargetRate").value || "0");
+}
+
+function getAveragingPlan(price) {
   const mults = [1, 1, 2, 4, 12, 36];
   const names = ["진입", "1차", "2차", "3차", "4차", "5차"];
   const prices = [];
@@ -93,15 +105,7 @@ function getPlan(price) {
   }));
 }
 
-function getSelectedRate() {
-  const targetType = $(ids.targetType).value;
-  if (targetType === "custom") {
-    return parseFloat($(ids.customTargetRate).value || "0");
-  }
-  return parseFloat($(ids.targetRate).value);
-}
-
-function getRemainQty(mode, firstBuyQty, totalQty, customRemainQty) {
+function getAvgRemainQty(mode, firstBuyQty, totalQty, customRemainQty) {
   if (mode === "all") return 0;
   if (mode === "first") return Math.min(firstBuyQty, totalQty);
   if (mode === "custom") return Math.min(Math.max(customRemainQty, 0), totalQty);
@@ -109,86 +113,73 @@ function getRemainQty(mode, firstBuyQty, totalQty, customRemainQty) {
   return 0;
 }
 
-function toggleCustomFields() {
-  const takeMode = $(ids.takeMode).value;
-  const targetType = $(ids.targetType).value;
-  $(ids.customRemainQty).disabled = takeMode !== "custom";
-  $(ids.customTargetRate).disabled = targetType !== "custom";
-  $(ids.targetRate).disabled = targetType !== "preset";
-}
-
-function toggleStartModeFields() {
-  const startMode = $(ids.startMode).value;
-  $(ids.freshFields).classList.toggle("hidden", startMode !== "fresh");
-  $(ids.holdingFields).classList.toggle("hidden", startMode !== "holding");
-}
-
-function collectInputValues() {
+function collectValues() {
   return {
-    startMode: $(ids.startMode).value,
-    stockName: $(ids.stockName).value,
-    currency: $(ids.currency).value,
-    price: $(ids.price).value,
-    seed: $(ids.seed).value,
-    holdingAvgPrice: $(ids.holdingAvgPrice).value,
-    holdingQty: $(ids.holdingQty).value,
-    remainingSeed: $(ids.remainingSeed).value,
-    takeMode: $(ids.takeMode).value,
-    targetType: $(ids.targetType).value,
-    targetRate: $(ids.targetRate).value,
-    customTargetRate: $(ids.customTargetRate).value,
-    customRemainQty: $(ids.customRemainQty).value
+    activeTab: S.activeTab,
+    startMode: $("startMode").value,
+    stockName: $("stockName").value,
+    currency: $("currency").value,
+    price: $("price").value,
+    seed: $("seed").value,
+    holdingAvgPrice: $("holdingAvgPrice").value,
+    holdingQty: $("holdingQty").value,
+    remainingSeed: $("remainingSeed").value,
+    avgTakeMode: $("avgTakeMode").value,
+    avgTargetType: $("avgTargetType").value,
+    avgTargetRate: $("avgTargetRate").value,
+    avgCustomTargetRate: $("avgCustomTargetRate").value,
+    avgCustomRemainQty: $("avgCustomRemainQty").value,
+    infSplitCount: $("infSplitCount").value,
+    infTakeMode: $("infTakeMode").value,
+    infTargetType: $("infTargetType").value,
+    infTargetRate: $("infTargetRate").value,
+    infCustomTargetRate: $("infCustomTargetRate").value,
+    infMinBuyQty: $("infMinBuyQty").value
   };
 }
 
-function applyInputValues(data) {
-  $(ids.startMode).value = data.startMode || "fresh";
-  $(ids.stockName).value = data.stockName || "";
-  $(ids.currency).value = data.currency || "USD";
-  $(ids.price).value = data.price || "";
-  $(ids.seed).value = data.seed || "";
-  $(ids.holdingAvgPrice).value = data.holdingAvgPrice || "";
-  $(ids.holdingQty).value = data.holdingQty || "";
-  $(ids.remainingSeed).value = data.remainingSeed || "";
-  $(ids.takeMode).value = data.takeMode || "all";
-  $(ids.targetType).value = data.targetType || "preset";
-  $(ids.targetRate).value = data.targetRate || "3";
-  $(ids.customTargetRate).value = data.customTargetRate || "";
-  $(ids.customRemainQty).value = data.customRemainQty || "";
+function applyValues(v) {
+  $("startMode").value = v.startMode || "fresh";
+  $("stockName").value = v.stockName || "";
+  $("currency").value = v.currency || "USD";
+  $("price").value = v.price || "";
+  $("seed").value = v.seed || "";
+  $("holdingAvgPrice").value = v.holdingAvgPrice || "";
+  $("holdingQty").value = v.holdingQty || "";
+  $("remainingSeed").value = v.remainingSeed || "";
+  $("avgTakeMode").value = v.avgTakeMode || "all";
+  $("avgTargetType").value = v.avgTargetType || "preset";
+  $("avgTargetRate").value = v.avgTargetRate || "3";
+  $("avgCustomTargetRate").value = v.avgCustomTargetRate || "";
+  $("avgCustomRemainQty").value = v.avgCustomRemainQty || "";
+  $("infSplitCount").value = v.infSplitCount || "40";
+  $("infTakeMode").value = v.infTakeMode || "all";
+  $("infTargetType").value = v.infTargetType || "preset";
+  $("infTargetRate").value = v.infTargetRate || "3";
+  $("infCustomTargetRate").value = v.infCustomTargetRate || "";
+  $("infMinBuyQty").value = v.infMinBuyQty || "2";
+
+  setActiveTab(v.activeTab || "averaging");
   toggleStartModeFields();
-  toggleCustomFields();
+  toggleAvgFields();
+  toggleInfFields();
 }
 
 function saveAuto() {
-  localStorage.setItem(KEY_AUTO, JSON.stringify(collectInputValues()));
-  $(ids.saveStatus).textContent = "입력값이 이 기기에 자동 저장되었습니다.";
+  localStorage.setItem(KEY_AUTO, JSON.stringify(collectValues()));
+  $("saveStatus").textContent = "입력값이 자동 저장되었습니다.";
 }
 
 function loadAuto() {
   const raw = localStorage.getItem(KEY_AUTO);
   if (!raw) return;
   try {
-    const data = JSON.parse(raw);
-    applyInputValues(data);
-    $(ids.saveStatus).textContent = "이전에 저장된 입력값을 불러왔습니다.";
+    const v = JSON.parse(raw);
+    applyValues(v);
+    $("saveStatus").textContent = "이전에 저장된 입력값을 불러왔습니다.";
   } catch {
-    $(ids.saveStatus).textContent = "저장값을 읽지 못했습니다.";
+    $("saveStatus").textContent = "저장값을 읽지 못했습니다.";
   }
-}
-
-function bindAutoSave() {
-  [
-    ids.startMode, ids.stockName, ids.currency, ids.price, ids.seed,
-    ids.holdingAvgPrice, ids.holdingQty, ids.remainingSeed,
-    ids.takeMode, ids.targetType, ids.targetRate, ids.customTargetRate, ids.customRemainQty
-  ].forEach(id => {
-    $(id).addEventListener("input", saveAuto);
-    $(id).addEventListener("change", () => {
-      toggleStartModeFields();
-      toggleCustomFields();
-      saveAuto();
-    });
-  });
 }
 
 function getPresets() {
@@ -205,90 +196,58 @@ function setPresets(list) {
   localStorage.setItem(KEY_PRESETS, JSON.stringify(list));
 }
 
+function renderPresetSelect() {
+  const list = getPresets();
+  let html = `<option value="">저장된 설정을 선택하세요</option>`;
+  html += list.map(item => {
+    const calcName = item.data.activeTab === "infinite" ? "무한매수" : "물타기";
+    return `<option value="${item.id}">${item.name} - ${calcName} - ${item.data.stockName || "종목명 없음"}</option>`;
+  }).join("");
+  $("presetSelect").innerHTML = html;
+}
+
 function savePreset() {
   const name = $("presetName").value.trim();
   if (!name) {
     alert("저장 이름을 입력해주세요.");
     return;
   }
-
-  const presets = getPresets();
-  const item = {
-    id: Date.now(),
-    name,
-    data: collectInputValues()
-  };
-
-  const existingIndex = presets.findIndex(p => p.name === name);
-  if (existingIndex >= 0) {
-    presets[existingIndex] = item;
-  } else {
-    presets.unshift(item);
-  }
-
-  setPresets(presets);
+  const list = getPresets();
+  const item = { id: Date.now(), name, data: collectValues() };
+  const idx = list.findIndex(x => x.name === name);
+  if (idx >= 0) list[idx] = item;
+  else list.unshift(item);
+  setPresets(list);
   renderPresetSelect();
   $("presetName").value = "";
-  $(ids.saveStatus).textContent = "현재 설정을 저장했습니다.";
+  $("saveStatus").textContent = "현재 설정을 저장했습니다.";
 }
 
 function loadPresetBySelected() {
-  const id = Number($(ids.presetSelect).value);
+  const id = Number($("presetSelect").value);
   if (!id) {
     alert("불러올 저장 설정을 선택해주세요.");
     return;
   }
-  const item = getPresets().find(p => p.id === id);
+  const item = getPresets().find(x => x.id === id);
   if (!item) return;
-  applyInputValues(item.data);
+  applyValues(item.data);
   saveAuto();
-  $(ids.saveStatus).textContent = `"${item.name}" 설정을 불러왔습니다.`;
+  $("saveStatus").textContent = `"${item.name}" 설정을 불러왔습니다.`;
 }
 
 function deletePresetBySelected() {
-  const id = Number($(ids.presetSelect).value);
+  const id = Number($("presetSelect").value);
   if (!id) {
     alert("삭제할 저장 설정을 선택해주세요.");
     return;
   }
-  const item = getPresets().find(p => p.id === id);
+  const item = getPresets().find(x => x.id === id);
   if (!item) return;
-  const ok = confirm(`"${item.name}" 설정을 삭제할까요?`);
-  if (!ok) return;
-
-  const presets = getPresets().filter(p => p.id !== id);
-  setPresets(presets);
+  if (!confirm(`"${item.name}" 설정을 삭제할까요?`)) return;
+  setPresets(getPresets().filter(x => x.id !== id));
   renderPresetSelect();
-  $(ids.saveStatus).textContent = "저장된 설정을 삭제했습니다.";
-}
-
-function getTakeModeText(mode, customRemainQty = "") {
-  if (mode === "all") return "전량 익절";
-  if (mode === "first") return "첫 진입 수량만 남기기";
-  if (mode === "custom") return `직접 수량 ${customRemainQty || 0}주 남기기`;
-  if (mode === "recover") return "원금 회수 후 보유";
-  return "";
-}
-
-function getStartModeText(mode) {
-  return mode === "holding" ? "보유 상태에서 시작" : "새로 시작";
-}
-
-function renderPresetSelect() {
-  const presets = getPresets();
-  const select = $(ids.presetSelect);
-
-  let html = `<option value="">저장된 설정을 선택하세요</option>`;
-  html += presets.map(item => {
-    const d = item.data || {};
-    const desc = d.startMode === "holding"
-      ? `${d.stockName || "종목명 없음"} / 보유 ${d.holdingQty || 0}주 / 남은시드 ${d.remainingSeed || 0}`
-      : `${d.stockName || "종목명 없음"} / 시드 ${d.seed || 0}`;
-
-    return `<option value="${item.id}">${item.name} - ${desc}</option>`;
-  }).join("");
-
-  select.innerHTML = html;
+  $("saveStatus").textContent = "저장된 설정을 삭제했습니다.";
 }
 
 async function copyText(text) {
@@ -301,7 +260,7 @@ async function copyText(text) {
 }
 
 function copyPlanSummary() {
-  const text = $(ids.planText).value.trim();
+  const text = $("planText").value.trim();
   if (!text) {
     alert("먼저 계산하기를 눌러주세요.");
     return;
@@ -310,7 +269,7 @@ function copyPlanSummary() {
 }
 
 function copyScenarioSummary() {
-  const text = $(ids.scenarioText).value.trim();
+  const text = $("scenarioText").value.trim();
   if (!text) {
     alert("먼저 계산하기를 눌러주세요.");
     return;
@@ -318,8 +277,8 @@ function copyScenarioSummary() {
   copyText(text);
 }
 
-function renderQuickList(containerId, rows) {
-  $(containerId).innerHTML = rows.map(row => `
+function renderQuickList(id, rows) {
+  $(id).innerHTML = rows.map(row => `
     <div class="quick-item">
       <div class="quick-label">${row.label}</div>
       <div class="quick-value">${row.value}</div>
@@ -327,68 +286,52 @@ function renderQuickList(containerId, rows) {
   `).join("");
 }
 
-function calculate() {
-  const startMode = $(ids.startMode).value;
-  const stockName = $(ids.stockName).value.trim();
-  const currentPrice = parseFloat($(ids.price).value);
-  const takeMode = $(ids.takeMode).value;
-  const selectedRate = getSelectedRate();
-  const customRemainQty = parseFloat($(ids.customRemainQty).value || "0");
-
+function getBaseAccountState() {
+  const startMode = $("startMode").value;
+  const currentPrice = parseFloat($("price").value);
   if (!currentPrice || currentPrice <= 0) {
-    alert("현재 주가를 올바르게 입력해주세요.");
-    return;
-  }
-  if (selectedRate < 0) {
-    alert("익절 목표 퍼센트는 0 이상으로 입력해주세요.");
-    return;
-  }
-  if (takeMode === "custom" && customRemainQty < 0) {
-    alert("직접 남길 수량은 0 이상으로 입력해주세요.");
-    return;
+    throw new Error("현재 주가를 올바르게 입력해주세요.");
   }
 
   let existingQty = 0;
   let existingCost = 0;
   let availableSeed = 0;
-  let firstBuyQtyRef = 0;
 
   if (startMode === "fresh") {
-    const seed = parseFloat($(ids.seed).value);
-    if (!seed || seed <= 0) {
-      alert("총 시드금액을 올바르게 입력해주세요.");
-      return;
-    }
+    const seed = parseFloat($("seed").value);
+    if (!seed || seed <= 0) throw new Error("총 시드금액을 올바르게 입력해주세요.");
     availableSeed = seed;
   } else {
-    const holdingAvgPrice = parseFloat($(ids.holdingAvgPrice).value);
-    const holdingQty = parseFloat($(ids.holdingQty).value);
-    const remainingSeed = parseFloat($(ids.remainingSeed).value);
+    const holdingAvgPrice = parseFloat($("holdingAvgPrice").value);
+    const holdingQty = parseFloat($("holdingQty").value);
+    const remainingSeed = parseFloat($("remainingSeed").value);
 
-    if (!holdingAvgPrice || holdingAvgPrice <= 0) {
-      alert("현재 보유 단가를 올바르게 입력해주세요.");
-      return;
-    }
-    if (!holdingQty || holdingQty <= 0) {
-      alert("현재 보유 수량을 올바르게 입력해주세요.");
-      return;
-    }
-    if (!remainingSeed || remainingSeed <= 0) {
-      alert("남아있는 시드금액을 올바르게 입력해주세요.");
-      return;
-    }
+    if (!holdingAvgPrice || holdingAvgPrice <= 0) throw new Error("현재 보유 단가를 올바르게 입력해주세요.");
+    if (!holdingQty || holdingQty <= 0) throw new Error("현재 보유 수량을 올바르게 입력해주세요.");
+    if (!remainingSeed || remainingSeed <= 0) throw new Error("남아있는 시드금액을 올바르게 입력해주세요.");
 
     existingQty = holdingQty;
     existingCost = holdingAvgPrice * holdingQty;
     availableSeed = remainingSeed;
   }
 
-  saveAuto();
+  return { startMode, currentPrice, existingQty, existingCost, availableSeed };
+}
 
-  const plan = getPlan(currentPrice);
+function calculateAveraging() {
+  const { startMode, currentPrice, existingQty, existingCost, availableSeed } = getBaseAccountState();
+  const stockName = $("stockName").value.trim();
+  const takeMode = $("avgTakeMode").value;
+  const selectedRate = getAvgSelectedRate();
+  const customRemainQty = parseFloat($("avgCustomRemainQty").value || "0");
+
+  if (selectedRate < 0) throw new Error("익절 목표 퍼센트는 0 이상으로 입력해주세요.");
+  if (takeMode === "custom" && customRemainQty < 0) throw new Error("직접 남길 수량은 0 이상으로 입력해주세요.");
+
+  const plan = getAveragingPlan(currentPrice);
   const unitCost = plan.reduce((sum, row) => sum + row.price * row.mult, 0);
   const baseQty = availableSeed / unitCost;
-  firstBuyQtyRef = baseQty;
+  const firstBuyQtyRef = baseQty;
 
   let addCumCost = 0;
   let totalQty = existingQty;
@@ -397,13 +340,10 @@ function calculate() {
   const rows = plan.map(row => {
     const qty = baseQty * row.mult;
     const cost = qty * row.price;
-
     addCumCost += cost;
     totalQty += qty;
     totalCost += cost;
-
     const avg = totalCost / totalQty;
-
     return {
       ...row,
       qty,
@@ -426,7 +366,7 @@ function calculate() {
   const selectedTargetPrice = finalRow.avg * (1 + selectedRate / 100);
   const remainCash = availableSeed - finalRow.addCumCost;
 
-  let finalRemainQty = getRemainQty(takeMode, firstBuyQtyRef, finalRow.totalQty, customRemainQty);
+  let finalRemainQty = getAvgRemainQty(takeMode, firstBuyQtyRef, finalRow.totalQty, customRemainQty);
   let finalSellQty = 0;
   let finalSellAmount = 0;
 
@@ -444,19 +384,19 @@ function calculate() {
   const finalProfit = finalTotalValue - finalRow.totalCost;
   const finalProfitRate = finalRow.totalCost > 0 ? (finalProfit / finalRow.totalCost) * 100 : 0;
 
-  $(ids.resultTitle).textContent = stockName ? `계산 결과 - ${stockName}` : "계산 결과";
-  $(ids.baseQty).textContent = fmtNum(baseQty, 4) + "주";
-  $(ids.existingCost).textContent = fmtMoney(existingCost);
-  $(ids.totalCost).textContent = fmtMoney(finalRow.addCumCost);
-  $(ids.remainCash).textContent = fmtMoney(remainCash);
-  $(ids.finalQty).textContent = fmtNum(finalRow.totalQty, 4) + "주";
-  $(ids.finalAvg).textContent = fmtMoney(finalRow.avg);
-  $(ids.selectedTarget).textContent = `+${fmtNum(selectedRate, 2)}%`;
-  $(ids.selectedTargetPrice).textContent = fmtMoney(selectedTargetPrice);
-  $(ids.finalProfit).textContent = fmtMoney(finalProfit);
-  $(ids.finalProfitRate).textContent = fmtPercent(finalProfitRate);
+  $("avgResultTitle").textContent = stockName ? `갱이 매매법 계산 결과 - ${stockName}` : "갱이 매매법 계산 결과";
+  $("avgBaseQty").textContent = fmtNum(baseQty, 4) + "주";
+  $("avgExistingCost").textContent = fmtMoney(existingCost);
+  $("avgTotalCost").textContent = fmtMoney(finalRow.addCumCost);
+  $("avgRemainCash").textContent = fmtMoney(remainCash);
+  $("avgFinalQty").textContent = fmtNum(finalRow.totalQty, 4) + "주";
+  $("avgFinalAvg").textContent = fmtMoney(finalRow.avg);
+  $("avgSelectedTarget").textContent = `+${fmtNum(selectedRate, 2)}%`;
+  $("avgSelectedTargetPrice").textContent = fmtMoney(selectedTargetPrice);
+  $("avgFinalProfit").textContent = fmtMoney(finalProfit);
+  $("avgFinalProfitRate").textContent = fmtPercent(finalProfitRate);
 
-  $(ids.tbody).innerHTML = rows.map(r => `
+  $("avgTbody").innerHTML = rows.map(r => `
     <tr>
       <td>${r.name}</td>
       <td>${fmtMoney(r.price)}</td>
@@ -478,8 +418,7 @@ function calculate() {
 
   const scenarioRows = rows.map(r => {
     const exitPrice = r.avg * (1 + selectedRate / 100);
-
-    let remainQty = getRemainQty(takeMode, firstBuyQtyRef, r.totalQty, customRemainQty);
+    let remainQty = getAvgRemainQty(takeMode, firstBuyQtyRef, r.totalQty, customRemainQty);
     let sellQty = 0;
     let sellAmount = 0;
 
@@ -517,7 +456,7 @@ function calculate() {
     };
   });
 
-  $(ids.scenarioBody).innerHTML = scenarioRows.map(r => `
+  $("avgScenarioBody").innerHTML = scenarioRows.map(r => `
     <tr>
       <td>${r.name}까지</td>
       <td>${fmtNum(r.totalQty, 4)}주</td>
@@ -534,62 +473,8 @@ function calculate() {
     </tr>
   `).join("");
 
-  const modeText = getTakeModeText(takeMode, customRemainQty);
-  const startText = getStartModeText(startMode);
-
-  const startSummary = startMode === "fresh"
-    ? [
-        `시작 방식: ${startText}`,
-        `총 시드금액: ${fmtMoney(availableSeed)}`
-      ]
-    : [
-        `시작 방식: ${startText}`,
-        `현재 보유 단가: ${fmtMoney(existingQty > 0 ? existingCost / existingQty : 0)}`,
-        `현재 보유 수량: ${fmtNum(existingQty, 4)}주`,
-        `기존 보유 금액: ${fmtMoney(existingCost)}`,
-        `남아있는 시드금액: ${fmtMoney(availableSeed)}`
-      ];
-
-  const planSummaryText = [
-    `${stockName || "종목명 미입력"} - 갱이 매매법 계획 요약`,
-    ...startSummary,
-    `통화: ${$(ids.currency).value}`,
-    `현재 주가: ${fmtMoney(currentPrice)}`,
-    `추가매수 기준 수량: ${fmtNum(baseQty, 4)}주`,
-    `선택 익절 목표: +${fmtNum(selectedRate, 2)}%`,
-    `선택 익절 방식: ${modeText}`,
-    `진입 가격: ${fmtMoney(rows[0].price)}`,
-    `1차 가격: ${fmtMoney(rows[1].price)}`,
-    `2차 가격: ${fmtMoney(rows[2].price)}`,
-    `3차 가격: ${fmtMoney(rows[3].price)}`,
-    `4차 가격: ${fmtMoney(rows[4].price)}`,
-    `5차 가격: ${fmtMoney(rows[5].price)}`,
-    `추가 매수 총액: ${fmtMoney(finalRow.addCumCost)}`,
-    `최종 합산 수량: ${fmtNum(finalRow.totalQty, 4)}주`,
-    `최종 합산 평단: ${fmtMoney(finalRow.avg)}`,
-    `최종 선택 익절가: ${fmtMoney(selectedTargetPrice)}`,
-    `최종 예상 수익: ${fmtMoney(finalProfit)}`,
-    `최종 예상 수익률: ${fmtPercent(finalProfitRate)}`
-  ].join("\n");
-
-  const scenarioSummaryText = scenarioRows.map(r => {
-    return [
-      `[${r.name}까지]`,
-      `합산 수량 ${fmtNum(r.totalQty, 4)}주`,
-      `합산 평단 ${fmtMoney(r.avg)}`,
-      `익절가 ${fmtMoney(r.exitPrice)}`,
-      `매도 수량 ${fmtNum(r.sellQty, 4)}주`,
-      `남는 수량 ${fmtNum(r.remainQty, 4)}주`,
-      `예상 수익 ${fmtMoney(r.profit)}`,
-      `예상 수익률 ${fmtPercent(r.profitRate)}`
-    ].join(" / ");
-  }).join("\n");
-
-  $(ids.planText).value = planSummaryText;
-  $(ids.scenarioText).value = scenarioSummaryText;
-
-  renderQuickList(ids.planSummaryView, [
-    { label: "시작 방식", value: startText },
+  renderQuickList("avgPlanSummaryView", [
+    { label: "시작 방식", value: startMode === "holding" ? "보유 상태 시작" : "새로 시작" },
     { label: "종목명", value: stockName || "-" },
     { label: "현재 주가", value: fmtMoney(currentPrice) },
     { label: "기준 수량", value: fmtNum(baseQty, 4) + "주" },
@@ -600,84 +485,261 @@ function calculate() {
     { label: "예상 수익률", value: fmtPercent(finalProfitRate) }
   ]);
 
-  renderQuickList(ids.scenarioSummaryView, scenarioRows.map(r => ({
+  renderQuickList("avgScenarioSummaryView", scenarioRows.map(r => ({
     label: `${r.name}까지`,
     value: `평단 ${fmtMoney(r.avg)} / 익절 ${fmtMoney(r.exitPrice)} / 수익 ${fmtMoney(r.profit)} / ${fmtPercent(r.profitRate)}`
   })));
 
-  $(ids.simpleGuide).innerHTML = startMode === "fresh"
-    ? `
-      <strong>${stockName ? stockName + " " : ""}한눈에 보는 쉬운 설명</strong>
-      <p>새로 시작 기준으로 총 시드금액 ${fmtMoney(availableSeed)} 안에서 5차까지 가능하도록 추가매수 기준 수량을 <span class="ok">${fmtNum(baseQty, 4)}주</span>로 계산했습니다.</p>
-      <p>최종 합산 수량은 <span class="ok">${fmtNum(finalRow.totalQty, 4)}주</span>, 최종 합산 평단은 <span class="ok">${fmtMoney(finalRow.avg)}</span>입니다.</p>
-      <p>현재 선택한 익절 목표는 <span class="warn">+${fmtNum(selectedRate, 2)}%</span>, 최종 선택 익절가는 <span class="warn">${fmtMoney(selectedTargetPrice)}</span>입니다.</p>
-      <p>최종 예상 수익은 <span class="ok">${fmtMoney(finalProfit)}</span>, 예상 수익률은 <span class="ok">${fmtPercent(finalProfitRate)}</span>입니다.</p>
-    `
-    : `
-      <strong>${stockName ? stockName + " " : ""}한눈에 보는 쉬운 설명</strong>
-      <p>현재 보유 수량 <span class="ok">${fmtNum(existingQty, 4)}주</span>, 보유 단가 <span class="ok">${fmtMoney(existingCost / existingQty)}</span>를 먼저 반영했습니다.</p>
-      <p>남아있는 시드금액 <span class="ok">${fmtMoney(availableSeed)}</span> 안에서 5차까지 추가매수를 계산했고, 최종 합산 수량은 <span class="ok">${fmtNum(finalRow.totalQty, 4)}주</span>입니다.</p>
-      <p>최종 합산 평단은 <span class="ok">${fmtMoney(finalRow.avg)}</span>, 선택 익절가는 <span class="warn">${fmtMoney(selectedTargetPrice)}</span>입니다.</p>
-      <p>즉, 이미 들고 있는 물량을 포함해서 앞으로 어떻게 물타고 어느 가격에서 익절할지 한 번에 볼 수 있습니다.</p>
-    `;
+  $("planText").value = [
+    `${stockName || "종목명 미입력"} - 갱이 매매법 계획 요약`,
+    `현재 주가: ${fmtMoney(currentPrice)}`,
+    `기준 수량: ${fmtNum(baseQty, 4)}주`,
+    `최종 수량: ${fmtNum(finalRow.totalQty, 4)}주`,
+    `최종 평단: ${fmtMoney(finalRow.avg)}`,
+    `최종 익절가: ${fmtMoney(selectedTargetPrice)}`,
+    `예상 수익: ${fmtMoney(finalProfit)}`,
+    `예상 수익률: ${fmtPercent(finalProfitRate)}`
+  ].join("\n");
 
-  $(ids.resultCard).style.display = "block";
-  $(ids.resultCard).scrollIntoView({ behavior: "smooth", block: "start" });
+  $("scenarioText").value = scenarioRows.map(r =>
+    `[${r.name}까지] 수량 ${fmtNum(r.totalQty, 4)}주 / 평단 ${fmtMoney(r.avg)} / 익절 ${fmtMoney(r.exitPrice)} / 수익 ${fmtMoney(r.profit)} / ${fmtPercent(r.profitRate)}`
+  ).join("\n");
+
+  $("avgResultCard").classList.remove("hidden");
+  $("infResultCard").classList.add("hidden");
+}
+
+function calculateInfinite() {
+  const { startMode, currentPrice, existingQty, existingCost, availableSeed } = getBaseAccountState();
+  const stockName = $("stockName").value.trim();
+  const splitCount = parseInt($("infSplitCount").value || "40", 10);
+  const minBuyQty = parseInt($("infMinBuyQty").value || "2", 10);
+  const takeMode = $("infTakeMode").value;
+  const selectedRate = getInfSelectedRate();
+
+  if (!splitCount || splitCount <= 0) throw new Error("분할 수를 올바르게 입력해주세요.");
+  if (!minBuyQty || minBuyQty <= 0) throw new Error("하루 최소 매수 기준을 올바르게 입력해주세요.");
+  if (selectedRate < 0) throw new Error("익절 목표 퍼센트는 0 이상으로 입력해주세요.");
+
+  const unitSeed = availableSeed / splitCount;
+  const baseQty = unitSeed / currentPrice;
+  const todayBuyQty = Math.max(baseQty, minBuyQty);
+  const todayBuyCost = todayBuyQty * currentPrice;
+
+  const totalCostAfterToday = existingCost + todayBuyCost;
+  const totalQtyAfterToday = existingQty + todayBuyQty;
+  const avgAfterToday = totalQtyAfterToday > 0 ? totalCostAfterToday / totalQtyAfterToday : 0;
+  const targetPrice = avgAfterToday * (1 + selectedRate / 100);
+
+  const usedSplits = Math.min(Math.floor(existingCost > 0 ? existingCost / unitSeed : 0), splitCount);
+  const remainingSplit = Math.max(splitCount - usedSplits - 1, 0);
+  const remainingCash = Math.max(availableSeed - todayBuyCost, 0);
+
+  const sellAllAmount = totalQtyAfterToday * targetPrice;
+  const profit = sellAllAmount - totalCostAfterToday;
+  const profitRate = totalCostAfterToday > 0 ? (profit / totalCostAfterToday) * 100 : 0;
+
+  $("infResultTitle").textContent = stockName ? `갱이 무한매수법 계산 결과 - ${stockName}` : "갱이 무한매수법 계산 결과";
+  $("infUnitSeed").textContent = fmtMoney(unitSeed);
+  $("infExistingCost").textContent = fmtMoney(existingCost);
+  $("infExistingQty").textContent = fmtNum(existingQty, 4) + "주";
+  $("infCurrentAvg").textContent = totalQtyAfterToday > 0 ? fmtMoney(avgAfterToday) : "-";
+  $("infTodayBuyQty").textContent = fmtNum(todayBuyQty, 4) + "주";
+  $("infTodayBuyCost").textContent = fmtMoney(todayBuyCost);
+  $("infRemainingSplit").textContent = fmtNum(remainingSplit, 0) + "개";
+  $("infRemainingCash").textContent = fmtMoney(remainingCash);
+  $("infTargetPrice").textContent = fmtMoney(targetPrice);
+  $("infProfitRate").textContent = fmtPercent(profitRate);
+
+  const planRows = [];
+  let runQty = existingQty;
+  let runCost = existingCost;
+  let runCash = availableSeed;
+
+  for (let i = 1; i <= Math.min(splitCount, 10); i++) {
+    const buyQty = Math.max(unitSeed / currentPrice, minBuyQty);
+    const buyCost = buyQty * currentPrice;
+    runQty += buyQty;
+    runCost += buyCost;
+    runCash -= buyCost;
+    const avg = runCost / runQty;
+    planRows.push({
+      step: i,
+      price: currentPrice,
+      qty: buyQty,
+      cost: buyCost,
+      totalQty: runQty,
+      avg,
+      cash: Math.max(runCash, 0),
+      remainSplit: Math.max(splitCount - i, 0)
+    });
+  }
+
+  $("infTbody").innerHTML = planRows.map(r => `
+    <tr>
+      <td>${r.step}회차</td>
+      <td>${fmtMoney(r.price)}</td>
+      <td>${fmtNum(r.qty, 4)}주</td>
+      <td>${fmtMoney(r.cost)}</td>
+      <td>${fmtNum(r.totalQty, 4)}주</td>
+      <td>${fmtMoney(r.avg)}</td>
+      <td>${fmtMoney(r.cash)}</td>
+      <td>${fmtNum(r.remainSplit, 0)}개</td>
+    </tr>
+  `).join("");
+
+  const scenarioRows = planRows.map((r, idx) => {
+    const tp = r.avg * (1 + selectedRate / 100);
+    const allSellAmount = r.totalQty * tp;
+    const p = allSellAmount - (existingCost + planRows.slice(0, idx + 1).reduce((s, x) => s + x.cost, 0));
+    const pr = (existingCost + planRows.slice(0, idx + 1).reduce((s, x) => s + x.cost, 0)) > 0
+      ? (p / (existingCost + planRows.slice(0, idx + 1).reduce((s, x) => s + x.cost, 0))) * 100
+      : 0;
+    const recoverQty = Math.min((existingCost + planRows.slice(0, idx + 1).reduce((s, x) => s + x.cost, 0)) / tp, r.totalQty);
+    const remainQty = Math.max(r.totalQty - recoverQty, 0);
+    return {
+      step: idx + 1,
+      totalQty: r.totalQty,
+      avg: r.avg,
+      tp,
+      profit: p,
+      profitRate: pr,
+      recoverQty,
+      remainQty
+    };
+  });
+
+  $("infScenarioBody").innerHTML = scenarioRows.map(r => `
+    <tr>
+      <td>${r.step}회차 기준</td>
+      <td>${fmtNum(r.totalQty, 4)}주</td>
+      <td>${fmtMoney(r.avg)}</td>
+      <td>${fmtMoney(r.tp)}</td>
+      <td>${fmtMoney(r.profit)}</td>
+      <td>${fmtPercent(r.profitRate)}</td>
+      <td>${fmtNum(r.recoverQty, 4)}주</td>
+      <td>${fmtNum(r.remainQty, 4)}주</td>
+    </tr>
+  `).join("");
+
+  renderQuickList("infPlanSummaryView", [
+    { label: "시작 방식", value: startMode === "holding" ? "보유 상태 시작" : "새로 시작" },
+    { label: "종목명", value: stockName || "-" },
+    { label: "1분할 금액", value: fmtMoney(unitSeed) },
+    { label: "오늘 매수 수량", value: fmtNum(todayBuyQty, 4) + "주" },
+    { label: "오늘 매수 금액", value: fmtMoney(todayBuyCost) },
+    { label: "오늘 매수 후 평단", value: fmtMoney(avgAfterToday) },
+    { label: "남은 분할 수", value: fmtNum(remainingSplit, 0) + "개" },
+    { label: "남은 시드", value: fmtMoney(remainingCash) }
+  ]);
+
+  renderQuickList("infScenarioSummaryView", [
+    { label: "익절 목표가", value: fmtMoney(targetPrice) },
+    { label: "전량 매도 예상 수익", value: fmtMoney(profit) },
+    { label: "예상 수익률", value: fmtPercent(profitRate) },
+    { label: "원금 회수 필요 매도수량", value: fmtNum(Math.min(totalCostAfterToday / targetPrice, totalQtyAfterToday), 4) + "주" },
+    { label: "원금 회수 후 남는 수량", value: fmtNum(Math.max(totalQtyAfterToday - Math.min(totalCostAfterToday / targetPrice, totalQtyAfterToday), 0), 4) + "주" }
+  ]);
+
+  $("planText").value = [
+    `${stockName || "종목명 미입력"} - 갱이 무한매수법 계획 요약`,
+    `현재 주가: ${fmtMoney(currentPrice)}`,
+    `분할 수: ${splitCount}`,
+    `1분할 금액: ${fmtMoney(unitSeed)}`,
+    `오늘 매수 수량: ${fmtNum(todayBuyQty, 4)}주`,
+    `오늘 매수 금액: ${fmtMoney(todayBuyCost)}`,
+    `오늘 매수 후 평단: ${fmtMoney(avgAfterToday)}`,
+    `익절 목표가: ${fmtMoney(targetPrice)}`,
+    `예상 수익률: ${fmtPercent(profitRate)}`
+  ].join("\n");
+
+  $("scenarioText").value = scenarioRows.map(r =>
+    `[${r.step}회차] 수량 ${fmtNum(r.totalQty, 4)}주 / 평단 ${fmtMoney(r.avg)} / 익절 ${fmtMoney(r.tp)} / 수익 ${fmtMoney(r.profit)} / ${fmtPercent(r.profitRate)}`
+  ).join("\n");
+
+  $("infResultCard").classList.remove("hidden");
+  $("avgResultCard").classList.add("hidden");
+}
+
+function calculate() {
+  try {
+    saveAuto();
+    if (S.activeTab === "averaging") {
+      calculateAveraging();
+    } else {
+      calculateInfinite();
+    }
+  } catch (e) {
+    alert(e.message || "계산 중 오류가 발생했습니다.");
+  }
 }
 
 function resetForm() {
-  $(ids.startMode).value = "fresh";
-  $(ids.stockName).value = "";
-  $(ids.currency).value = "USD";
-  $(ids.price).value = "";
-  $(ids.seed).value = "";
-  $(ids.holdingAvgPrice).value = "";
-  $(ids.holdingQty).value = "";
-  $(ids.remainingSeed).value = "";
-  $(ids.takeMode).value = "all";
-  $(ids.targetType).value = "preset";
-  $(ids.targetRate).value = "3";
-  $(ids.customTargetRate).value = "";
-  $(ids.customRemainQty).value = "";
-  $(ids.presetName).value = "";
-  $(ids.resultCard).style.display = "none";
-  $(ids.tbody).innerHTML = "";
-  $(ids.scenarioBody).innerHTML = "";
-  $(ids.planSummaryView).innerHTML = "";
-  $(ids.scenarioSummaryView).innerHTML = "";
-  $(ids.resultTitle).textContent = "계산 결과";
-  $(ids.baseQty).textContent = "-";
-  $(ids.existingCost).textContent = "-";
-  $(ids.totalCost).textContent = "-";
-  $(ids.remainCash).textContent = "-";
-  $(ids.finalQty).textContent = "-";
-  $(ids.finalAvg).textContent = "-";
-  $(ids.selectedTarget).textContent = "-";
-  $(ids.selectedTargetPrice).textContent = "-";
-  $(ids.finalProfit).textContent = "-";
-  $(ids.finalProfitRate).textContent = "-";
-  $(ids.planText).value = "";
-  $(ids.scenarioText).value = "";
-  $(ids.simpleGuide).innerHTML = "";
+  $("startMode").value = "fresh";
+  $("stockName").value = "";
+  $("currency").value = "USD";
+  $("price").value = "";
+  $("seed").value = "";
+  $("holdingAvgPrice").value = "";
+  $("holdingQty").value = "";
+  $("remainingSeed").value = "";
+  $("avgTakeMode").value = "all";
+  $("avgTargetType").value = "preset";
+  $("avgTargetRate").value = "3";
+  $("avgCustomTargetRate").value = "";
+  $("avgCustomRemainQty").value = "";
+  $("infSplitCount").value = "40";
+  $("infTakeMode").value = "all";
+  $("infTargetType").value = "preset";
+  $("infTargetRate").value = "3";
+  $("infCustomTargetRate").value = "";
+  $("infMinBuyQty").value = "2";
+  $("presetName").value = "";
+  $("planText").value = "";
+  $("scenarioText").value = "";
+  $("avgResultCard").classList.add("hidden");
+  $("infResultCard").classList.add("hidden");
   localStorage.removeItem(KEY_AUTO);
-  $(ids.saveStatus).textContent = "자동 저장된 입력값과 화면을 초기화했습니다.";
   toggleStartModeFields();
-  toggleCustomFields();
+  toggleAvgFields();
+  toggleInfFields();
+  $("saveStatus").textContent = "입력값을 초기화했습니다.";
 }
 
-function bindButtons() {
+function bindEvents() {
+  $("tabAveraging").addEventListener("click", () => setActiveTab("averaging"));
+  $("tabInfinite").addEventListener("click", () => setActiveTab("infinite"));
+  $("startMode").addEventListener("change", () => {
+    toggleStartModeFields();
+    saveAuto();
+  });
+
+  [
+    "stockName", "currency", "price", "seed", "holdingAvgPrice", "holdingQty", "remainingSeed",
+    "avgTakeMode", "avgTargetType", "avgTargetRate", "avgCustomTargetRate", "avgCustomRemainQty",
+    "infSplitCount", "infTakeMode", "infTargetType", "infTargetRate", "infCustomTargetRate", "infMinBuyQty"
+  ].forEach(id => {
+    $(id).addEventListener("input", saveAuto);
+    $(id).addEventListener("change", () => {
+      toggleAvgFields();
+      toggleInfFields();
+      saveAuto();
+    });
+  });
+
+  $("savePresetBtn").addEventListener("click", savePreset);
+  $("loadPresetBtn").addEventListener("click", loadPresetBySelected);
+  $("deletePresetBtn").addEventListener("click", deletePresetBySelected);
   $("calcBtn").addEventListener("click", calculate);
   $("resetBtn").addEventListener("click", resetForm);
   $("copyPlanBtn").addEventListener("click", copyPlanSummary);
   $("copyScenarioBtn").addEventListener("click", copyScenarioSummary);
-  $("savePresetBtn").addEventListener("click", savePreset);
-  $("loadPresetBtn").addEventListener("click", loadPresetBySelected);
-  $("deletePresetBtn").addEventListener("click", deletePresetBySelected);
 }
 
 loadAuto();
-bindAutoSave();
-bindButtons();
+bindEvents();
 toggleStartModeFields();
-toggleCustomFields();
+toggleAvgFields();
+toggleInfFields();
 renderPresetSelect();
+setActiveTab(S.activeTab);
