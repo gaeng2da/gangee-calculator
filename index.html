@@ -4,263 +4,15 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>갱이 매매법 물타기 계산기</title>
-  <style>
-    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    body {
-      margin: 0;
-      font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
-      line-height: 1.6;
-    }
-    .wrap {
-      max-width: 1360px;
-      margin: 0 auto;
-      padding: 16px;
-    }
-    .card {
-      background: #111827;
-      border: 1px solid #1f2937;
-      border-radius: 20px;
-      padding: 18px;
-      margin-bottom: 16px;
-      box-shadow: 0 10px 24px rgba(0,0,0,0.22);
-    }
-    h1, h2, h3 {
-      margin: 0 0 10px;
-      color: #f9fafb;
-    }
-    h1 { font-size: 28px; line-height: 1.25; }
-    h2 { font-size: 22px; }
-    h3 { font-size: 18px; }
-    p {
-      margin: 6px 0;
-      color: #d1d5db;
-      font-size: 16px;
-    }
-    .muted { color: #9ca3af; font-size: 14px; }
-    .badge {
-      display: inline-block;
-      margin-top: 8px;
-      padding: 7px 12px;
-      border-radius: 999px;
-      background: #1e3a8a;
-      color: #dbeafe;
-      font-size: 13px;
-      font-weight: 700;
-    }
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-    .grid-4 {
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
-    }
-    label {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 15px;
-      font-weight: 800;
-      color: #f3f4f6;
-    }
-    input, select, textarea {
-      width: 100%;
-      min-height: 54px;
-      padding: 14px 16px;
-      border-radius: 14px;
-      border: 1px solid #374151;
-      background: #0b1220;
-      color: #f9fafb;
-      font-size: 17px;
-      outline: none;
-    }
-    textarea {
-      min-height: 120px;
-      resize: vertical;
-      line-height: 1.5;
-    }
-    input:focus, select:focus, textarea:focus {
-      border-color: #60a5fa;
-      box-shadow: 0 0 0 3px rgba(96,165,250,0.15);
-    }
-    .btns {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 16px;
-    }
-    button {
-      min-height: 52px;
-      border: 0;
-      border-radius: 14px;
-      padding: 14px 18px;
-      font-size: 17px;
-      font-weight: 800;
-      cursor: pointer;
-    }
-    .primary {
-      background: #2563eb;
-      color: white;
-      flex: 1 1 180px;
-    }
-    .secondary {
-      background: #374151;
-      color: white;
-      flex: 1 1 140px;
-    }
-    .success {
-      background: #059669;
-      color: white;
-      flex: 1 1 180px;
-    }
-    .summary {
-      display: grid;
-      grid-template-columns: repeat(8, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 14px;
-    }
-    .stat {
-      background: #0b1220;
-      border: 1px solid #1f2937;
-      border-radius: 16px;
-      padding: 16px;
-    }
-    .stat .k {
-      color: #9ca3af;
-      font-size: 13px;
-      margin-bottom: 6px;
-    }
-    .stat .v {
-      color: #f9fafb;
-      font-size: 19px;
-      font-weight: 900;
-      line-height: 1.35;
-      word-break: break-word;
-    }
-    .table-wrap {
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      margin-top: 12px;
-      border-radius: 14px;
-      border: 1px solid #1f2937;
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      min-width: 1450px;
-      background: #111827;
-    }
-    th, td {
-      border-bottom: 1px solid #1f2937;
-      padding: 12px 10px;
-      text-align: right;
-      font-size: 14px;
-      white-space: nowrap;
-      vertical-align: middle;
-    }
-    th:first-child, td:first-child { text-align: left; }
-    th {
-      background: #172033;
-      color: #f3f4f6;
-      position: sticky;
-      top: 0;
-      z-index: 1;
-    }
-    tr:hover td { background: rgba(255,255,255,0.02); }
-    .note {
-      background: #0b1220;
-      border: 1px solid #1f2937;
-      border-radius: 14px;
-      padding: 14px;
-      margin-top: 12px;
-    }
-    .ok { color: #86efac; }
-    .warn { color: #fbbf24; }
-    .danger { color: #fca5a5; }
-    .save-info {
-      font-size: 14px;
-      color: #93c5fd;
-      margin-top: 10px;
-    }
-    .footer {
-      color: #9ca3af;
-      font-size: 13px;
-      margin-top: 10px;
-    }
-    .pill {
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 999px;
-      font-size: 12px;
-      font-weight: 800;
-      background: #1f2937;
-      color: #d1d5db;
-    }
-    .scenario-title {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      flex-wrap: wrap;
-    }
-    .copy-wrap {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-      margin-top: 14px;
-    }
-
-    @media (max-width: 1200px) {
-      .summary { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-      .grid-4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 900px) {
-      h1 { font-size: 24px; }
-      h2 { font-size: 20px; }
-      .grid { grid-template-columns: 1fr; }
-      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .wrap { padding: 12px; }
-      .card { padding: 16px; border-radius: 18px; }
-      .stat .v { font-size: 18px; }
-      .copy-wrap { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 560px) {
-      body { line-height: 1.55; }
-      h1 { font-size: 22px; }
-      h2 { font-size: 18px; }
-      h3 { font-size: 16px; }
-      p { font-size: 15px; }
-      label { font-size: 14px; }
-      input, select, textarea {
-        min-height: 52px;
-        font-size: 16px;
-        padding: 13px 14px;
-      }
-      button {
-        width: 100%;
-        min-height: 50px;
-        font-size: 16px;
-      }
-      .btns { flex-direction: column; }
-      .summary, .grid-4 { grid-template-columns: 1fr; }
-      .stat .v { font-size: 17px; }
-      th, td {
-        font-size: 13px;
-        padding: 10px 8px;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
+    <div class="card hero-card">
       <h1>갱이 매매법 물타기 계산기</h1>
       <p>현재 주가와 총 시드금액만 넣으면, 진입부터 5차까지 추가 매수 가격과 수량을 쉽게 계산합니다.</p>
-      <div class="badge">완성형 v4 / 수익·수익률·복사 기능 포함 / 웹사이트형 / 아이패드 최적화</div>
-      <p class="muted">입력한 값은 이 브라우저에 자동 저장됩니다.</p>
+      <div class="badge">v5 / 종목 저장 / 웹사이트형 / 아이패드·노트북 최적화</div>
+      <p class="muted">입력값은 자동 저장되고, 종목별로 따로 저장해서 다시 불러올 수 있습니다.</p>
     </div>
 
     <div class="card">
@@ -288,15 +40,16 @@
       </div>
       <div class="note">
         <strong>아주 쉽게 설명하면:</strong>
-        <p>현재 가격에서 시작해서 주가가 내려올 때 정해진 자리마다 나눠 삽니다. 총 예산을 넣으면 그 돈 안에서 5차까지 갈 수 있도록 첫 수량을 자동 계산합니다.</p>
+        <p>현재 가격을 시작점으로 잡고, 주가가 내려올 때 미리 정한 자리마다 나눠서 사는 계산기입니다. 총 예산을 넣으면 그 돈 안에서 5차까지 가능하도록 첫 수량을 자동 계산합니다.</p>
       </div>
     </div>
 
     <div class="card">
-      <div class="scenario-title">
+      <div class="section-head">
         <h2>익절 시나리오 설정</h2>
         <span class="pill">실전형</span>
       </div>
+
       <div class="grid-4">
         <div>
           <label for="takeMode">익절 방식</label>
@@ -335,13 +88,39 @@
           <input id="customRemainQty" type="number" step="0.0001" min="0" placeholder="예: 10" />
         </div>
       </div>
+
       <div class="btns">
-        <button class="primary" onclick="calculate()">계산하기</button>
-        <button class="secondary" onclick="resetForm()">초기화</button>
-        <button class="success" onclick="copyPlanSummary()">계획 요약 복사</button>
-        <button class="success" onclick="copyScenarioSummary()">익절 시나리오 복사</button>
+        <button class="primary" id="calcBtn">계산하기</button>
+        <button class="secondary" id="resetBtn">초기화</button>
+        <button class="success" id="copyPlanBtn">계획 요약 복사</button>
+        <button class="success" id="copyScenarioBtn">익절 시나리오 복사</button>
       </div>
+
       <div class="save-info" id="saveStatus">입력값 자동 저장 대기중</div>
+    </div>
+
+    <div class="card">
+      <div class="section-head">
+        <h2>종목별 저장</h2>
+        <span class="pill">새 기능</span>
+      </div>
+
+      <div class="grid save-grid">
+        <div>
+          <label for="presetName">저장 이름</label>
+          <input id="presetName" type="text" placeholder="예: SOXL 기본전략, TQQQ 공격형" />
+        </div>
+        <div class="save-btn-wrap">
+          <button class="warning full-btn" id="savePresetBtn">현재 설정 저장</button>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>이 기능은 이렇게 씁니다:</strong>
+        <p>지금 입력한 종목과 시드, 익절 설정을 이름 붙여 저장해두고 다음에 바로 불러올 수 있습니다. 예를 들어 SOXL용, TQQQ용을 따로 저장해둘 수 있습니다.</p>
+      </div>
+
+      <div id="presetList" class="preset-list"></div>
     </div>
 
     <div class="card" id="resultCard" style="display:none;">
@@ -372,17 +151,17 @@
           <div class="k">최종 선택 익절가</div>
           <div class="v" id="selectedTargetPrice">-</div>
         </div>
-        <div class="stat">
+        <div class="stat profit-stat">
           <div class="k">최종 예상 수익</div>
           <div class="v" id="finalProfit">-</div>
         </div>
-        <div class="stat">
+        <div class="stat profit-stat">
           <div class="k">최종 예상 수익률</div>
           <div class="v" id="finalProfitRate">-</div>
         </div>
       </div>
 
-      <h3 style="margin-top:18px;">물타기 결과표</h3>
+      <h3 class="sub-head">물타기 결과표</h3>
       <div class="table-wrap">
         <table>
           <thead>
@@ -408,7 +187,7 @@
         </table>
       </div>
 
-      <h3 style="margin-top:18px;">익절 시나리오 표</h3>
+      <h3 class="sub-head">익절 시나리오 표</h3>
       <div class="table-wrap">
         <table>
           <thead>
@@ -422,7 +201,6 @@
               <th>예상 매도 금액</th>
               <th>예상 수익</th>
               <th>예상 수익률</th>
-              <th>해당 단계 총 평가금액</th>
               <th>원금 회수 필요 매도수량</th>
               <th>원금 회수 후 남는 수량</th>
               <th>원금 회수 후 남는 수익</th>
@@ -448,415 +226,6 @@
     </div>
   </div>
 
-  <script>
-    const KEY = "gangee_calc_v4";
-
-    function getCurrencyInfo() {
-      const currency = document.getElementById("currency").value;
-      if (currency === "KRW") {
-        return { symbol: "₩", locale: "ko-KR" };
-      }
-      return { symbol: "$", locale: "en-US" };
-    }
-
-    function fmtNum(v, d = 4) {
-      return Number(v).toLocaleString("en-US", {
-        minimumFractionDigits: 0,
-        maximumFractionDigits: d
-      });
-    }
-
-    function fmtMoney(v) {
-      const info = getCurrencyInfo();
-      return info.symbol + Number(v).toLocaleString(info.locale, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      });
-    }
-
-    function fmtPercent(v) {
-      return Number(v).toLocaleString("en-US", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-      }) + "%";
-    }
-
-    function getPlan(price) {
-      const mults = [1, 1, 2, 4, 12, 36];
-      const names = ["진입", "1차", "2차", "3차", "4차", "5차"];
-      const prices = [];
-      prices[0] = price;
-      prices[1] = prices[0] * 0.8;
-      prices[2] = prices[1] * 0.89;
-      prices[3] = prices[2] * 0.5;
-      prices[4] = prices[3] * 0.5;
-      prices[5] = prices[4] * 0.5;
-
-      return names.map((name, i) => ({
-        name,
-        price: prices[i],
-        mult: mults[i]
-      }));
-    }
-
-    function saveInputs() {
-      const data = {
-        stockName: document.getElementById("stockName").value,
-        currency: document.getElementById("currency").value,
-        price: document.getElementById("price").value,
-        seed: document.getElementById("seed").value,
-        takeMode: document.getElementById("takeMode").value,
-        targetType: document.getElementById("targetType").value,
-        targetRate: document.getElementById("targetRate").value,
-        customTargetRate: document.getElementById("customTargetRate").value,
-        customRemainQty: document.getElementById("customRemainQty").value
-      };
-      localStorage.setItem(KEY, JSON.stringify(data));
-      document.getElementById("saveStatus").textContent = "입력값이 이 기기에 자동 저장되었습니다.";
-    }
-
-    function loadInputs() {
-      const raw = localStorage.getItem(KEY);
-      if (!raw) return;
-      try {
-        const data = JSON.parse(raw);
-        document.getElementById("stockName").value = data.stockName || "";
-        document.getElementById("currency").value = data.currency || "USD";
-        document.getElementById("price").value = data.price || "";
-        document.getElementById("seed").value = data.seed || "";
-        document.getElementById("takeMode").value = data.takeMode || "all";
-        document.getElementById("targetType").value = data.targetType || "preset";
-        document.getElementById("targetRate").value = data.targetRate || "3";
-        document.getElementById("customTargetRate").value = data.customTargetRate || "";
-        document.getElementById("customRemainQty").value = data.customRemainQty || "";
-        document.getElementById("saveStatus").textContent = "이전에 저장된 입력값을 불러왔습니다.";
-      } catch (e) {
-        document.getElementById("saveStatus").textContent = "저장값을 읽지 못했습니다.";
-      }
-      toggleCustomFields();
-    }
-
-    function bindAutoSave() {
-      ["stockName", "currency", "price", "seed", "takeMode", "targetType", "targetRate", "customTargetRate", "customRemainQty"].forEach(id => {
-        document.getElementById(id).addEventListener("input", saveInputs);
-        document.getElementById(id).addEventListener("change", () => {
-          toggleCustomFields();
-          saveInputs();
-        });
-      });
-    }
-
-    function toggleCustomFields() {
-      const takeMode = document.getElementById("takeMode").value;
-      const targetType = document.getElementById("targetType").value;
-      document.getElementById("customRemainQty").disabled = takeMode !== "custom";
-      document.getElementById("customTargetRate").disabled = targetType !== "custom";
-      document.getElementById("targetRate").disabled = targetType !== "preset";
-    }
-
-    function getSelectedRate() {
-      const targetType = document.getElementById("targetType").value;
-      if (targetType === "custom") {
-        return parseFloat(document.getElementById("customTargetRate").value || "0");
-      }
-      return parseFloat(document.getElementById("targetRate").value);
-    }
-
-    function getRemainQty(mode, baseQty, cumQty, customRemainQty) {
-      if (mode === "all") return 0;
-      if (mode === "first") return Math.min(baseQty, cumQty);
-      if (mode === "custom") return Math.min(Math.max(customRemainQty, 0), cumQty);
-      if (mode === "recover") return null;
-      return 0;
-    }
-
-    async function copyText(text) {
-      try {
-        await navigator.clipboard.writeText(text);
-        alert("복사되었습니다.");
-      } catch (e) {
-        alert("복사에 실패했습니다. 아래 요약 박스에서 직접 복사해주세요.");
-      }
-    }
-
-    function copyPlanSummary() {
-      const text = document.getElementById("planText").value.trim();
-      if (!text) {
-        alert("먼저 계산하기를 눌러주세요.");
-        return;
-      }
-      copyText(text);
-    }
-
-    function copyScenarioSummary() {
-      const text = document.getElementById("scenarioText").value.trim();
-      if (!text) {
-        alert("먼저 계산하기를 눌러주세요.");
-        return;
-      }
-      copyText(text);
-    }
-
-    function calculate() {
-      const stockName = document.getElementById("stockName").value.trim();
-      const price = parseFloat(document.getElementById("price").value);
-      const seed = parseFloat(document.getElementById("seed").value);
-      const takeMode = document.getElementById("takeMode").value;
-      const selectedRate = getSelectedRate();
-      const customRemainQty = parseFloat(document.getElementById("customRemainQty").value || "0");
-
-      if (!price || !seed || price <= 0 || seed <= 0) {
-        alert("현재 주가와 총 시드금액을 올바르게 입력해주세요.");
-        return;
-      }
-      if (selectedRate < 0) {
-        alert("익절 목표 퍼센트는 0 이상으로 입력해주세요.");
-        return;
-      }
-      if (takeMode === "custom" && customRemainQty < 0) {
-        alert("직접 남길 수량은 0 이상으로 입력해주세요.");
-        return;
-      }
-
-      saveInputs();
-
-      const plan = getPlan(price);
-      const unitCost = plan.reduce((sum, row) => sum + row.price * row.mult, 0);
-      const baseQty = seed / unitCost;
-
-      let cumQty = 0;
-      let cumCost = 0;
-
-      const rows = plan.map(row => {
-        const qty = baseQty * row.mult;
-        const cost = qty * row.price;
-        cumQty += qty;
-        cumCost += cost;
-        const avg = cumCost / cumQty;
-
-        return {
-          ...row,
-          qty,
-          cost,
-          cumQty,
-          cumCost,
-          avg,
-          tp3: avg * 1.03,
-          tp5: avg * 1.05,
-          tp10: avg * 1.10,
-          tp15: avg * 1.15,
-          tp20: avg * 1.20,
-          tp25: avg * 1.25,
-          tp30: avg * 1.30
-        };
-      });
-
-      const finalRow = rows[rows.length - 1];
-      const selectedTargetPrice = finalRow.avg * (1 + selectedRate / 100);
-      const totalCost = finalRow.cumCost;
-      const remainCash = seed - totalCost;
-
-      let finalRemainQty = getRemainQty(takeMode, baseQty, finalRow.cumQty, customRemainQty);
-      let finalSellQty = 0;
-      let finalSellAmount = 0;
-
-      if (takeMode === "recover") {
-        finalSellQty = Math.min(finalRow.cumCost / selectedTargetPrice, finalRow.cumQty);
-        finalSellAmount = finalSellQty * selectedTargetPrice;
-        finalRemainQty = Math.max(finalRow.cumQty - finalSellQty, 0);
-      } else {
-        finalSellQty = Math.max(finalRow.cumQty - finalRemainQty, 0);
-        finalSellAmount = finalSellQty * selectedTargetPrice;
-      }
-
-      const finalRemainValue = finalRemainQty * selectedTargetPrice;
-      const finalTotalValue = finalSellAmount + finalRemainValue;
-      const finalProfit = finalTotalValue - finalRow.cumCost;
-      const finalProfitRate = finalRow.cumCost > 0 ? (finalProfit / finalRow.cumCost) * 100 : 0;
-
-      document.getElementById("resultTitle").textContent = stockName ? `계산 결과 - ${stockName}` : "계산 결과";
-      document.getElementById("baseQty").textContent = fmtNum(baseQty, 4) + "주";
-      document.getElementById("totalCost").textContent = fmtMoney(totalCost);
-      document.getElementById("remainCash").textContent = fmtMoney(remainCash);
-      document.getElementById("finalAvg").textContent = fmtMoney(finalRow.avg);
-      document.getElementById("selectedTarget").textContent = `+${fmtNum(selectedRate, 2)}%`;
-      document.getElementById("selectedTargetPrice").textContent = fmtMoney(selectedTargetPrice);
-      document.getElementById("finalProfit").textContent = fmtMoney(finalProfit);
-      document.getElementById("finalProfitRate").textContent = fmtPercent(finalProfitRate);
-
-      document.getElementById("tbody").innerHTML = rows.map(r => `
-        <tr>
-          <td>${r.name}</td>
-          <td>${fmtMoney(r.price)}</td>
-          <td>${r.mult}배</td>
-          <td>${fmtNum(r.qty, 4)}주</td>
-          <td>${fmtMoney(r.cost)}</td>
-          <td>${fmtNum(r.cumQty, 4)}주</td>
-          <td>${fmtMoney(r.cumCost)}</td>
-          <td>${fmtMoney(r.avg)}</td>
-          <td>${fmtMoney(r.tp3)}</td>
-          <td>${fmtMoney(r.tp5)}</td>
-          <td>${fmtMoney(r.tp10)}</td>
-          <td>${fmtMoney(r.tp15)}</td>
-          <td>${fmtMoney(r.tp20)}</td>
-          <td>${fmtMoney(r.tp25)}</td>
-          <td>${fmtMoney(r.tp30)}</td>
-        </tr>
-      `).join("");
-
-      const scenarioRows = rows.map(r => {
-        const exitPrice = r.avg * (1 + selectedRate / 100);
-        const totalEval = r.cumQty * exitPrice;
-
-        let remainQty = getRemainQty(takeMode, baseQty, r.cumQty, customRemainQty);
-        let sellQty = 0;
-        let sellAmount = 0;
-
-        const recoverQty = Math.min(r.cumCost / exitPrice, r.cumQty);
-        const recoverRemainQty = Math.max(r.cumQty - recoverQty, 0);
-        const recoverProfit = recoverRemainQty * exitPrice;
-
-        if (takeMode === "recover") {
-          sellQty = recoverQty;
-          sellAmount = sellQty * exitPrice;
-          remainQty = recoverRemainQty;
-        } else {
-          sellQty = Math.max(r.cumQty - remainQty, 0);
-          sellAmount = sellQty * exitPrice;
-        }
-
-        const remainValue = remainQty * exitPrice;
-        const totalValue = sellAmount + remainValue;
-        const profit = totalValue - r.cumCost;
-        const profitRate = r.cumCost > 0 ? (profit / r.cumCost) * 100 : 0;
-
-        return {
-          name: r.name,
-          cumQty: r.cumQty,
-          avg: r.avg,
-          exitPrice,
-          remainQty,
-          sellQty,
-          sellAmount,
-          profit,
-          profitRate,
-          totalEval,
-          recoverQty,
-          recoverRemainQty,
-          recoverProfit
-        };
-      });
-
-      document.getElementById("scenarioBody").innerHTML = scenarioRows.map(r => `
-        <tr>
-          <td>${r.name}까지</td>
-          <td>${fmtNum(r.cumQty, 4)}주</td>
-          <td>${fmtMoney(r.avg)}</td>
-          <td>${fmtMoney(r.exitPrice)}</td>
-          <td>${fmtNum(r.remainQty, 4)}주</td>
-          <td>${fmtNum(r.sellQty, 4)}주</td>
-          <td>${fmtMoney(r.sellAmount)}</td>
-          <td>${fmtMoney(r.profit)}</td>
-          <td>${fmtPercent(r.profitRate)}</td>
-          <td>${fmtMoney(r.totalEval)}</td>
-          <td>${fmtNum(r.recoverQty, 4)}주</td>
-          <td>${fmtNum(r.recoverRemainQty, 4)}주</td>
-          <td>${fmtMoney(r.recoverProfit)}</td>
-        </tr>
-      `).join("");
-
-      const modeText =
-        takeMode === "all" ? "전량 익절" :
-        takeMode === "first" ? "첫 진입 수량만 남기기" :
-        takeMode === "custom" ? `직접 수량 ${fmtNum(customRemainQty, 4)}주 남기기` :
-        "원금 회수 후 보유";
-
-      const planSummary = [
-        `${stockName || "종목명 미입력"} - 갱이 매매법 계획 요약`,
-        `통화: ${document.getElementById("currency").value}`,
-        `현재 주가: ${fmtMoney(price)}`,
-        `총 시드금액: ${fmtMoney(seed)}`,
-        `자동 기준 수량: ${fmtNum(baseQty, 4)}주`,
-        `선택 익절 목표: +${fmtNum(selectedRate, 2)}%`,
-        `선택 익절 방식: ${modeText}`,
-        `진입 가격: ${fmtMoney(rows[0].price)}`,
-        `1차 가격: ${fmtMoney(rows[1].price)}`,
-        `2차 가격: ${fmtMoney(rows[2].price)}`,
-        `3차 가격: ${fmtMoney(rows[3].price)}`,
-        `4차 가격: ${fmtMoney(rows[4].price)}`,
-        `5차 가격: ${fmtMoney(rows[5].price)}`,
-        `최종 누적 평단: ${fmtMoney(finalRow.avg)}`,
-        `최종 선택 익절가: ${fmtMoney(selectedTargetPrice)}`,
-        `최종 예상 수익: ${fmtMoney(finalProfit)}`,
-        `최종 예상 수익률: ${fmtPercent(finalProfitRate)}`
-      ].join("\n");
-
-      const scenarioSummary = scenarioRows.map(r => {
-        return [
-          `[${r.name}까지]`,
-          `누적 수량 ${fmtNum(r.cumQty, 4)}주`,
-          `누적 평단 ${fmtMoney(r.avg)}`,
-          `익절가 ${fmtMoney(r.exitPrice)}`,
-          `매도 수량 ${fmtNum(r.sellQty, 4)}주`,
-          `남는 수량 ${fmtNum(r.remainQty, 4)}주`,
-          `예상 매도 금액 ${fmtMoney(r.sellAmount)}`,
-          `예상 수익 ${fmtMoney(r.profit)}`,
-          `예상 수익률 ${fmtPercent(r.profitRate)}`,
-          `원금 회수 필요 매도수량 ${fmtNum(r.recoverQty, 4)}주`,
-          `원금 회수 후 남는 수량 ${fmtNum(r.recoverRemainQty, 4)}주`,
-          `원금 회수 후 남는 수익 ${fmtMoney(r.recoverProfit)}`
-        ].join(" / ");
-      }).join("\n");
-
-      document.getElementById("planText").value = planSummary;
-      document.getElementById("scenarioText").value = scenarioSummary;
-
-      document.getElementById("simpleGuide").innerHTML = `
-        <strong>${stockName ? stockName + " " : ""}한눈에 보는 쉬운 설명</strong>
-        <p>총 시드금액 ${fmtMoney(seed)} 안에서 5차까지 가능하도록 첫 기준 수량을 <span class="ok">${fmtNum(baseQty, 4)}주</span>로 자동 계산했습니다.</p>
-        <p>현재 선택한 익절 목표는 <span class="warn">+${fmtNum(selectedRate, 2)}%</span>이고, 최종 기준 선택 익절가는 <span class="warn">${fmtMoney(selectedTargetPrice)}</span>입니다.</p>
-        <p>현재 익절 방식은 <span class="warn">${modeText}</span>입니다.</p>
-        <p>최종 기준으로 계산했을 때 예상 수익은 <span class="ok">${fmtMoney(finalProfit)}</span>, 예상 수익률은 <span class="ok">${fmtPercent(finalProfitRate)}</span>입니다.</p>
-        <p>익절 시나리오 표에서는 각 단계까지만 물탔을 때 몇 주를 팔고, 얼마를 회수하고, 수익이 얼마나 되는지 확인할 수 있습니다.</p>
-      `;
-
-      document.getElementById("resultCard").style.display = "block";
-      document.getElementById("resultCard").scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-
-    function resetForm() {
-      document.getElementById("stockName").value = "";
-      document.getElementById("currency").value = "USD";
-      document.getElementById("price").value = "";
-      document.getElementById("seed").value = "";
-      document.getElementById("takeMode").value = "all";
-      document.getElementById("targetType").value = "preset";
-      document.getElementById("targetRate").value = "3";
-      document.getElementById("customTargetRate").value = "";
-      document.getElementById("customRemainQty").value = "";
-      document.getElementById("resultCard").style.display = "none";
-      document.getElementById("tbody").innerHTML = "";
-      document.getElementById("scenarioBody").innerHTML = "";
-      document.getElementById("resultTitle").textContent = "계산 결과";
-      document.getElementById("baseQty").textContent = "-";
-      document.getElementById("totalCost").textContent = "-";
-      document.getElementById("remainCash").textContent = "-";
-      document.getElementById("finalAvg").textContent = "-";
-      document.getElementById("selectedTarget").textContent = "-";
-      document.getElementById("selectedTargetPrice").textContent = "-";
-      document.getElementById("finalProfit").textContent = "-";
-      document.getElementById("finalProfitRate").textContent = "-";
-      document.getElementById("planText").value = "";
-      document.getElementById("scenarioText").value = "";
-      document.getElementById("simpleGuide").innerHTML = "";
-      localStorage.removeItem(KEY);
-      document.getElementById("saveStatus").textContent = "저장값과 입력값을 모두 초기화했습니다.";
-      toggleCustomFields();
-    }
-
-    loadInputs();
-    bindAutoSave();
-    toggleCustomFields();
-  </script>
+  <script src="app.js"></script>
 </body>
 </html>
